@@ -1,0 +1,6 @@
+numpy
+matplotlib
+Pillow
+pyrtlsdr
+pyserial
+visvis

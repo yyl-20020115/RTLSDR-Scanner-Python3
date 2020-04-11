@@ -1,0 +1,21 @@
+Metadata-Version: 1.1
+Name: rtlsdr-scanner
+Version: 1.3.2
+Summary: A simple spectrum analyser for scanning
+ with a RTL-SDR compatible USB device
+Home-page: http://eartoearoak.com/software/rtlsdr-scanner
+Author: Al Brown
+Author-email: al@eartoearok.com
+License: GPLv3
+Description: UNKNOWN
+Keywords: rtlsdr spectrum analyser
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Topic :: Communications :: Ham Radio
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Visualization
