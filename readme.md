@@ -1,4 +1,4 @@
-# RTLSDR Scanner #
+# RTLSDR Scanner - in Python3#
 
 Copyright 2012 - 2015 Al Brown
 
