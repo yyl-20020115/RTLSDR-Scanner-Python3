@@ -259,13 +259,13 @@ class FrameMain(wx.Frame):
         textNfft = wx.StaticText(self.toolbar2, label="FFT size")
         self.choiceNfft = wx.Choice(self.toolbar2, choices=list(map(str, NFFT)))
         self.choiceNfft.SetToolTip('Higher values for greater'
-                                         'precision')
+                                   'precision')
 
         textDisplay = wx.StaticText(self.toolbar2, label="Display")
         self.choiceDisplay = wx.Choice(self.toolbar2, choices=DISPLAY[::2])
         self.Bind(wx.EVT_CHOICE, self.__on_choice, self.choiceDisplay)
         self.choiceDisplay.SetToolTip('Spectrogram available in'
-                                            'continuous mode')
+                                      'continuous mode')
 
         grid2 = wx.GridBagSizer(5, 5)
         grid2.Add(textMode, pos=(0, 0), flag=wx.ALIGN_CENTER)
@@ -398,12 +398,13 @@ class FrameMain(wx.Frame):
 
     def __on_menu_highlight(self, event):
         item = self.GetMenuBar().FindItemById(event.GetId())
+        mhelp = ""
         if item is not None:
-            help = item.GetHelp()
+            mhelp = item.GetHelp()
         else:
-            help = ''
+            mhelp = ""
 
-        self.status.set_general(help, level=None)
+        self.status.set_general(mhelp, level=None)
 
     def __on_popup_menu(self, event):
         if not isinstance(event.GetEventObject(), NavigationToolbar):
@@ -429,7 +430,7 @@ class FrameMain(wx.Frame):
         dlg = wx.FileDialog(self, "Open a scan", self.settings.dirScans,
                             self.filename,
                             File.get_type_filters(File.Types.SAVE),
-                            wx.OPEN)
+                            wx.ID_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             self.open(dlg.GetDirectory(), dlg.GetFilename())
         dlg.Destroy()
@@ -441,7 +442,7 @@ class FrameMain(wx.Frame):
         dlg = wx.FileDialog(self, "Merge a scan", self.settings.dirScans,
                             self.filename,
                             File.get_type_filters(File.Types.SAVE),
-                            wx.OPEN)
+                            wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             self.__merge(dlg.GetDirectory(), dlg.GetFilename())
         dlg.Destroy()
@@ -472,7 +473,7 @@ class FrameMain(wx.Frame):
         dlg = wx.FileDialog(self, "Save a scan", self.settings.dirScans,
                             self.filename,
                             File.get_type_filters(File.Types.SAVE),
-                            wx.SAVE | wx.OVERWRITE_PROMPT)
+                            wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if dlg.ShowModal() == wx.ID_OK:
             self.status.set_general("Saving...")
             fileName = dlg.GetFilename()
@@ -491,7 +492,7 @@ class FrameMain(wx.Frame):
     def __on_export_scan(self, _event):
         dlg = wx.FileDialog(self, "Export a scan", self.settings.dirExport,
                             self.filename, File.get_type_filters(),
-                            wx.SAVE | wx.OVERWRITE_PROMPT)
+                            wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if dlg.ShowModal() == wx.ID_OK:
             self.status.set_general("Exporting...")
             fileName = dlg.GetFilename()
@@ -509,7 +510,7 @@ class FrameMain(wx.Frame):
                                 self.settings.dirExport,
                                 self.filename,
                                 File.get_type_filters(File.Types.IMAGE),
-                                wx.SAVE | wx.OVERWRITE_PROMPT)
+                                wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         dlgFile.SetFilterIndex(File.ImageType.PNG)
         if dlgFile.ShowModal() == wx.ID_OK:
             dlgImg = DialogImageSize(self, self.settings)
@@ -545,7 +546,7 @@ class FrameMain(wx.Frame):
                                     self.settings.dirExport,
                                     self.filename,
                                     File.get_type_filters(File.Types.GEO),
-                                    wx.SAVE | wx.OVERWRITE_PROMPT)
+                                    wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
             dlgFile.SetFilterIndex(File.GeoType.KMZ)
             if dlgFile.ShowModal() == wx.ID_OK:
                 fileName = dlgFile.GetFilename()
@@ -571,7 +572,7 @@ class FrameMain(wx.Frame):
                             self.settings.dirExport,
                             self.filename,
                             File.get_type_filters(File.Types.TRACK),
-                            wx.SAVE | wx.OVERWRITE_PROMPT)
+                            wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if dlg.ShowModal() == wx.ID_OK:
             self.status.set_general("Exporting...")
             fileName = dlg.GetFilename()
@@ -589,7 +590,7 @@ class FrameMain(wx.Frame):
             dlg = wx.FileDialog(self, 'Continuous export',
                                 self.settings.dirExport, '',
                                 File.get_type_filters(File.Types.CONT),
-                                wx.SAVE | wx.OVERWRITE_PROMPT)
+                                wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
             if dlg.ShowModal() == wx.ID_OK:
                 fileName = dlg.GetFilename()
                 dirName = dlg.GetDirectory()
@@ -608,7 +609,7 @@ class FrameMain(wx.Frame):
     def __on_page(self, _event):
         dlg = wx.PageSetupDialog(self, self.pageConfig)
         if dlg.ShowModal() == wx.ID_OK:
-            self.pageConfig = wx.PageSetupDialogData(dlg.GetPageSetupDialogData())
+            self.pageConfig = wx.PageSetupDialogData(dlg.GetPageSetupData())
             self.printConfig.SetPrintData(self.pageConfig.GetPrintData())
         dlg.Destroy()
 

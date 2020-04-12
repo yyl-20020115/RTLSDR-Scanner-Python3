@@ -36,24 +36,24 @@ from matplotlib.image import pil_to_array
 
 
 def add_colours():
-    r = {'red':     ((0.0, 1.0, 1.0),
-                     (1.0, 1.0, 1.0)),
-         'green':   ((0.0, 0.0, 0.0),
-                     (1.0, 0.0, 0.0)),
-         'blue':   ((0.0, 0.0, 0.0),
-                    (1.0, 0.0, 0.0))}
-    g = {'red':     ((0.0, 0.0, 0.0),
-                     (1.0, 0.0, 0.0)),
-         'green':   ((0.0, 1.0, 1.0),
-                     (1.0, 1.0, 1.0)),
-         'blue':    ((0.0, 0.0, 0.0),
-                     (1.0, 0.0, 0.0))}
-    b = {'red':     ((0.0, 0.0, 0.0),
-                     (1.0, 0.0, 0.0)),
-         'green':   ((0.0, 0.0, 0.0),
-                     (1.0, 0.0, 0.0)),
-         'blue':    ((0.0, 1.0, 1.0),
-                     (1.0, 1.0, 1.0))}
+    r = {'red': ((0.0, 1.0, 1.0),
+                 (1.0, 1.0, 1.0)),
+         'green': ((0.0, 0.0, 0.0),
+                   (1.0, 0.0, 0.0)),
+         'blue': ((0.0, 0.0, 0.0),
+                  (1.0, 0.0, 0.0))}
+    g = {'red': ((0.0, 0.0, 0.0),
+                 (1.0, 0.0, 0.0)),
+         'green': ((0.0, 1.0, 1.0),
+                   (1.0, 1.0, 1.0)),
+         'blue': ((0.0, 0.0, 0.0),
+                  (1.0, 0.0, 0.0))}
+    b = {'red': ((0.0, 0.0, 0.0),
+                 (1.0, 0.0, 0.0)),
+         'green': ((0.0, 0.0, 0.0),
+                   (1.0, 0.0, 0.0)),
+         'blue': ((0.0, 1.0, 1.0),
+                  (1.0, 1.0, 1.0))}
 
     rMap = LinearSegmentedColormap('red_map', r)
     gMap = LinearSegmentedColormap('red_map', g)
@@ -68,17 +68,21 @@ def get_colours():
     colours.sort()
     return colours
 
+
 def find_artists(figure, gid):
     return figure.findobj(lambda x: x.get_gid() == gid)
+
 
 def set_table_colour(table, colour):
     for _loc, cell in table.get_celld().items():
         cell.set_edgecolor(colour)
 
+
 def utc_to_mpl(utc):
     local = time.mktime(time.localtime(utc))
     dt = datetime.datetime.fromtimestamp(local)
     return date2num(dt)
+
 
 def set_date_ticks(axis, auto=True):
     axis.axis_date()
@@ -126,6 +130,7 @@ def create_heatmap(xs, ys, imageSize, blobSize, cmap):
     coloured = Image.fromarray(rgba, 'RGBA')
 
     return coloured
+
 
 if __name__ == '__main__':
     print('Please run rtlsdr_scan.py')

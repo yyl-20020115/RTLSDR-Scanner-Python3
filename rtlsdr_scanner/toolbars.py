@@ -48,7 +48,7 @@ class MFStatusbar(wx.StatusBar):
     TEXT_GPS = 'GPS: '
 
     def __init__(self, parent, log):
-        self.controls = [None] * 5
+        self.controls = [None, None, None, None, None]
         self.timeStart = None
         self.log = log
 
@@ -88,7 +88,8 @@ class MFStatusbar(wx.StatusBar):
         if event is not None:
             event.Skip()
 
-    def __format_tooltip(self, text):
+    @staticmethod
+    def __format_tooltip(text):
         if len(text):
             lines = text.splitlines()
             width = max(map(len, lines))
@@ -120,17 +121,17 @@ class MFStatusbar(wx.StatusBar):
         self.controls[2].pulse()
 
     def warn_gps(self):
-        self.controls[2].on("yellow")
+        self.controls[2].on(wx.YELLOW)
 
     def error_gps(self):
         self.controls[2].on(wx.RED)
 
     def enable_gps(self):
-        self.controls[2].on('w')
+        self.controls[2].on(wx.GREEN)
         self.set_gps('Enabled')
 
     def disable_gps(self):
-        self.controls[2].on('grey')
+        self.controls[2].on(wx.LIGHT_GREY)
         self.set_gps('Disabled')
 
     def set_progress(self, progress):
@@ -139,7 +140,7 @@ class MFStatusbar(wx.StatusBar):
             text = '{:.1f}%\nUnknown'.format(progress)
         else:
             timeTotal = time.time() - self.timeStart
-            timeLeft = ((timeTotal / (progress)) * 100.0) - timeTotal
+            timeLeft = ((timeTotal / progress) * 100.0) - timeTotal
             delta = timedelta(seconds=math.ceil(timeLeft))
             text = '{:.1f}%\n{}'.format(progress, delta)
 
@@ -186,17 +187,17 @@ class NavigationToolbar(NavigationToolbar2WxAgg):
         self.__add_spacer(False)
 
         liveId = wx.NewId()
-        self.AddCheckTool(liveId, "",load_bitmap('auto_refresh'),
+        self.AddCheckTool(liveId, "", load_bitmap('auto_refresh'),
                           shortHelp='Real time plotting\n(slow and buggy)')
         self.ToggleTool(liveId, settings.liveUpdate)
-        wx.EvtHandler.Bind(self,  wx.EVT_TOOL, self.__on_check_update)
+        wx.EvtHandler.Bind(self, wx.EVT_TOOL, self.__on_check_update)
 
         gridId = wx.NewId()
-        self.AddCheckTool(gridId, "",load_bitmap('grid'),
+        self.AddCheckTool(gridId, "", load_bitmap('grid'),
                           shortHelp='Toggle plot_line grid')
         self.ToggleTool(gridId, settings.grid)
-        #wx.EVT_TOOL(self, gridId, self.__on_check_grid)
-        self.Bind(wx.EVT_TOOL,self.__on_check_grid,None,gridId)
+
+        self.Bind(wx.EVT_TOOL, self.__on_check_grid, None, gridId)
         self.peakId = wx.NewId()
         self.peaksId = None
 
@@ -378,16 +379,15 @@ class NavigationToolbar(NavigationToolbar2WxAgg):
     def __add_check_tool(self, bitmap, toolTip, callback, setting=None, toolId=None):
         if toolId is None:
             toolId = wx.NewId()
-        self.AddCheckTool(toolId, "",load_bitmap(bitmap), shortHelp=toolTip)
-        #wx.EVT_TOOL(self, toolId, callback)
-        self.Bind(wx.EVT_TOOL,callback,None,toolId)
+        self.AddCheckTool(toolId, "", load_bitmap(bitmap), shortHelp=toolTip)
+        self.Bind(wx.EVT_TOOL, callback, None, toolId)
         if setting is not None:
             self.ToggleTool(toolId, setting)
         self.extraTools.append(toolId)
 
     def __add_spacer(self, temp=True):
         sepId = wx.NewId()
-        self.AddCheckTool(sepId,"", load_bitmap('spacer'))
+        self.AddCheckTool(sepId, "", load_bitmap('spacer'))
         self.EnableTool(sepId, False)
         if temp:
             self.extraTools.append(sepId)
@@ -401,12 +401,11 @@ class NavigationToolbar(NavigationToolbar2WxAgg):
     def __add_peaks(self):
         self.peaksId = wx.NewId()
         self.__add_check_tool('peaks', 'Mark peaks above threshold '
-                              '(right click for options)',
+                                       '(right click for options)',
                               self.__on_check_peaks,
                               self.settings.peaks,
                               toolId=self.peaksId)
-        self.Bind(wx.EVT_TOOL_RCLICKED,self.__on_set_peaks,None,self.peaksId)
-        #wx.EVT_TOOL_RCLICKED(self, self.peaksId, self.__on_set_peaks)
+        self.Bind(wx.EVT_TOOL_RCLICKED, self.__on_set_peaks, None, self.peaksId)
 
     def __add_auto_range(self, scaleF, scaleL, scaleT):
         if scaleF:
@@ -533,8 +532,8 @@ class NavigationToolbar(NavigationToolbar2WxAgg):
             self.__add_check_tool('smooth', 'Smooth (right click for options)',
                                   self.__on_check_smooth,
                                   toolId=self.smoothId)
-            self.Bind(wx.EVT_TOOL_RCLICKED,self.__on_set_smooth,None,self.smoothId)
-            #wx.EVT_TOOL_RCLICKED(self, self.smoothId, self.__on_set_smooth)
+            self.Bind(wx.EVT_TOOL_RCLICKED, self.__on_set_smooth, None, self.smoothId)
+            # wx.EVT_TOOL_RCLICKED(self, self.smoothId, self.__on_set_smooth)
 
             self.diffId = wx.NewId()
             self.__add_check_tool('diff', 'Differentiate spectrum',
@@ -556,7 +555,7 @@ class NavigationToolbar(NavigationToolbar2WxAgg):
             self.__add_check_tool('smooth', 'Smooth (right click for options)',
                                   self.__on_check_smooth,
                                   toolId=self.smoothId)
-            self.Bind(wx.EVT_TOOL_RCLICKED, self.__on_set_smooth,None, self.smoothId)
+            self.Bind(wx.EVT_TOOL_RCLICKED, self.__on_set_smooth, None, self.smoothId)
             self.diffId = wx.NewId()
             self.__add_check_tool('diff', 'Differentiate spectrum',
                                   self.__on_check_diff,
@@ -572,7 +571,7 @@ class NavigationToolbar(NavigationToolbar2WxAgg):
             self.__add_check_tool('smooth', 'Smooth (right click for options)',
                                   self.__on_check_smooth,
                                   toolId=self.smoothId)
-            self.Bind(wx.EVT_TOOL_RCLICKED, self.__on_set_smooth,None, self.smoothId)
+            self.Bind(wx.EVT_TOOL_RCLICKED, self.__on_set_smooth, None, self.smoothId)
             self.diffId = wx.NewId()
             self.__add_check_tool('diff', 'Differentiate spectrum',
                                   self.__on_check_diff,
@@ -605,10 +604,10 @@ class NavigationToolbarCompare(NavigationToolbar2WxAgg):
         self.AddSeparator()
 
         gridId = wx.NewId()
-        self.AddCheckTool(gridId,"", load_bitmap('grid'),
+        self.AddCheckTool(gridId, "", load_bitmap('grid'),
                           shortHelp='Toggle grid')
         self.ToggleTool(gridId, True)
-        self.Bind(wx.EVT_TOOL, self.__on_check_grid,None, gridId)
+        self.Bind(wx.EVT_TOOL, self.__on_check_grid, None, gridId)
 
     def __on_check_grid(self, event):
         grid = event.IsChecked()
@@ -616,6 +615,7 @@ class NavigationToolbarCompare(NavigationToolbar2WxAgg):
 
     def clear_auto(self):
         pass
+
 
 if __name__ == '__main__':
     print('Please run rtlsdr_scan.py')

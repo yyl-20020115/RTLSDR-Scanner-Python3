@@ -23,13 +23,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import itertools
-
 import matplotlib
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 import numpy
 import rtlsdr
 import wx
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.mlab import psd
+from wx.adv import HyperlinkCtrl
 from wx.lib.agw.cubecolourdialog import CubeColourDialog
 from wx.lib.masked.numctrl import NumCtrl
 
@@ -55,8 +56,8 @@ class DialogOffset(wx.Dialog):
 
         textHelp = wx.StaticText(self,
                                  label="Remove the aerial and press refresh, "
-                                 "adjust the offset so the shaded areas overlay the flattest parts "
-                                 "of the plot_line.")
+                                       "adjust the offset so the shaded areas overlay the flattest parts "
+                                       "of the plot_line.")
 
         textFreq = wx.StaticText(self, label="Test frequency (MHz)")
         self.spinFreq = wx.SpinCtrl(self)
@@ -130,13 +131,13 @@ class DialogOffset(wx.Dialog):
         self.__setup_plot()
         pos = WINFUNC[::2].index(self.winFunc)
         function = WINFUNC[1::2][pos]
-        powers, freqs = matplotlib.mlab.psd(capture,
-                                            NFFT=1024,
-                                            Fs=SAMPLE_RATE / 1e6,
-                                            window=function(1024))
+        powers, freqs = psd(capture,
+                            NFFT=1024,
+                            Fs=SAMPLE_RATE / 1e6,
+                            window=function(1024))
 
         plot = []
-        for x, y in itertools.izip(freqs, powers):
+        for x, y in zip(freqs, powers):
             plot.append((x, y))
         plot.sort()
         x, y = numpy.transpose(plot)
@@ -147,9 +148,9 @@ class DialogOffset(wx.Dialog):
         self.EndModal(wx.ID_OK)
 
     def __on_refresh(self, _event):
-        dlg = wx.BusyInfo('Please wait...')
-
         try:
+            dlg = wx.BusyInfo('Please wait...')
+
             if self.device.isDevice:
                 sdr = rtlsdr.RtlSdr(self.device.indexRtl)
             else:
@@ -164,18 +165,17 @@ class DialogOffset(wx.Dialog):
                 message = error.message
             else:
                 message = error
-            dlg.Destroy()
-            dlg = wx.MessageDialog(self,
-                                   'Capture failed:\n{}'.format(message),
-                                   'Error',
-                                   wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
+            # dlg.Destroy()
+            dlg2 = wx.MessageDialog(self,
+                                    'Capture failed:\n{}'.format(message),
+                                    'Error',
+                                    wx.OK | wx.ICON_ERROR)
+            dlg2.ShowModal()
+            dlg2.Destroy()
             return
 
         self.__plot(capture)
-
-        dlg.Destroy()
+        # dlg.Destroy()
 
     def __on_spin(self, _event):
         self.offset = self.spinOffset.GetValue() * 1e3
@@ -251,9 +251,9 @@ class DialogPrefs(wx.Dialog):
                                      "Tune SDR#")
         self.checkTune.SetValue(settings.clickTune)
         self.checkTune.SetToolTip('Double click plot_line to tune SDR#')
-        textPlugin = wx.HyperlinkCtrl(self, wx.ID_ANY,
-                                      label="(Requires plugin)",
-                                      url="http://eartoearoak.com/software/sdrsharp-net-remote")
+        textPlugin = HyperlinkCtrl(self, wx.ID_ANY,
+                                   label="(Requires plugin)",
+                                   url="http://eartoearoak.com/software/sdrsharp-net-remote")
 
         self.radioAvg = wx.RadioButton(self, wx.ID_ANY, 'Average Scans',
                                        style=wx.RB_GROUP)
@@ -270,7 +270,7 @@ class DialogPrefs(wx.Dialog):
         self.spinCtrlMaxScans.SetRange(1, 5000)
         self.spinCtrlMaxScans.SetValue(settings.retainMax)
         self.spinCtrlMaxScans.SetToolTip('Maximum previous scans'
-                                               ' to display')
+                                         ' to display')
 
         textWidth = wx.StaticText(self, label="Line width")
         self.ctrlWidth = NumCtrl(self, integerWidth=2, fractionWidth=1)
@@ -393,7 +393,7 @@ class DialogAdvPrefs(wx.Dialog):
                                       0, 75,
                                       style=wx.SL_LABELS)
         self.slideOverlap.SetToolTip('Power spectral density'
-                                           ' overlap')
+                                     ' overlap')
         textWindow = wx.StaticText(self, label='Window')
         self.buttonWindow = wx.Button(self, wx.ID_ANY, self.winFunc)
         self.Bind(wx.EVT_BUTTON, self.__on_window, self.buttonWindow)
@@ -486,8 +486,8 @@ class DialogWinFunc(wx.Dialog):
 
         wx.Dialog.__init__(self, parent=parent, title="Window Function")
 
-        self.figure = matplotlib.figure.Figure(facecolor='white',
-                                               figsize=(5, 4))
+        self.figure = Figure(facecolor='white',
+                             figsize=(5, 4))
         self.figure.suptitle('Window Function')
         self.canvas = FigureCanvas(self, -1, self.figure)
         self.axesWin = self.figure.add_subplot(211)
@@ -545,7 +545,7 @@ class DialogWinFunc(wx.Dialog):
 
     def __on_choice(self, _event):
         self.winFunc = WINFUNC[::2][self.choice.GetSelection()]
-        self.plot()
+        self.__plot()
 
     def __on_ok(self, _event):
         self.EndModal(wx.ID_OK)

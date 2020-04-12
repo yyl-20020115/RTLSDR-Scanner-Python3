@@ -172,7 +172,7 @@ class Spectrogram:
             self.overflow['right'].append(marker)
 
     def __draw_overflow(self):
-        for pos, overflow in self.overflow.iteritems():
+        for pos, overflow in self.overflow.items():
             if len(overflow) > 0:
                 text = ''
                 for measure in overflow:
@@ -181,6 +181,7 @@ class Spectrogram:
                     text += self.labels[measure].get_text()
 
                 label = self.overflowLabels[pos]
+                textMath = ""
                 if pos == 'left':
                     textMath = '$\\blacktriangleleft$\n' + text
                 elif pos == 'right':
@@ -229,7 +230,7 @@ class Spectrogram:
                 self.barBase.set_clim(vmin, vmax)
                 try:
                     self.barBase.draw_all()
-                except:
+                except RuntimeError:
                     pass
             if self.settings.autoT or force:
                 self.axes.set_ylim(extent[2], extent[3])
@@ -284,7 +285,7 @@ class Spectrogram:
         self.barBase.set_cmap(colourMap)
         try:
             self.barBase.draw_all()
-        except:
+        except RuntimeError:
             pass
 
     def close(self):
@@ -309,7 +310,7 @@ class ThreadPlot(threading.Thread):
         if self.data is None:
             self.parent.threadPlot = None
             return
-
+        peakF, peakL, peakT = 0, 0, 0
         total = len(self.data)
         if total > 0:
             if self.settings.plotFunc == PlotFunc.NONE:

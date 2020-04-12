@@ -42,10 +42,8 @@ class DialogSysInfo(wx.Dialog):
         wx.Dialog.__init__(self, parent=parent, title="System Information")
 
         textVersions = wx.TextCtrl(self,
-                                   style=wx.TE_MULTILINE |
-                                   wx.TE_READONLY |
-                                   wx.TE_DONTWRAP |
-                                   wx.TE_NO_VSCROLL)
+                                   style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_DONTWRAP | wx.TE_NO_VSCROLL)
+
         buttonOk = wx.Button(self, wx.ID_OK)
 
         self.__populate_versions(textVersions)
@@ -62,7 +60,7 @@ class DialogSysInfo(wx.Dialog):
             imageVer = Image.PILLOW_VERSION
         except AttributeError:
             imageType = 'PIL'
-            imageVer = Image.VERSION
+            imageVer = Image.PILLOW_VERSION
 
         visvisVer = 'Not installed'
         if not hasattr(sys, 'frozen'):
@@ -70,6 +68,8 @@ class DialogSysInfo(wx.Dialog):
                 import visvis as vv
                 visvisVer = vv.__version__
             except ImportError:
+                import visvis as vv
+                visvisVer = vv.__version__
                 pass
 
         versions = ('Hardware:\n'
@@ -96,7 +96,7 @@ class DialogSysInfo(wx.Dialog):
         control.SetValue(versions)
 
         dc = wx.WindowDC(control)
-        extent = list(dc.GetMultiLineTextExtent(versions, control.GetFont()))
+        extent = list(dc.GetMultiLineTextExtent(versions))
         extent[0] += wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X) * 2
         extent[1] += wx.SystemSettings.GetMetric(wx.SYS_HSCROLL_Y) * 2
         control.SetMinSize((extent[0], extent[1]))
@@ -109,11 +109,12 @@ class DialogAbout(wx.Dialog):
 
         bitmapIcon = wx.StaticBitmap(self, bitmap=load_bitmap('icon'))
         textAbout = wx.StaticText(self, label="A simple spectrum analyser for "
-                                  "scanning\n with a RTL-SDR compatible USB "
-                                  "device", style=wx.ALIGN_CENTRE)
-        textLink = wx.HyperlinkCtrl(self, wx.ID_ANY,
-                                    label="http://eartoearoak.com/software/rtlsdr-scanner",
-                                    url="http://eartoearoak.com/software/rtlsdr-scanner")
+                                              "scanning\n with a RTL-SDR compatible USB "
+                                              "device", style=wx.ALIGN_CENTRE)
+
+        textLink = wx.adv.HyperlinkCtrl(self, wx.ID_ANY,
+                                        label="http://eartoearoak.com/software/rtlsdr-scanner",
+                                        url="http://eartoearoak.com/software/rtlsdr-scanner")
         textVersion = wx.StaticText(self,
                                     label='v' + '.'.join([str(x) for x in VERSION]))
         buttonOk = wx.Button(self, wx.ID_OK)

@@ -58,8 +58,8 @@ class PrintOut(wx.Printout):
         self.figure.set_size_inches(oldSize)
         self.figure.set_dpi(oldDpi)
 
-        imageWx = wx.EmptyImage(image.size[0], image.size[1])
-        imageWx.SetData(image.convert('RGB').tostring())
+        imageWx = wx.Image(image.size[0], image.size[1])
+        imageWx.SetData(image.convert('RGB').tobytes())
 
         return imageWx
 

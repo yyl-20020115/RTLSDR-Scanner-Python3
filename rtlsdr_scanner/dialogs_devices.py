@@ -42,7 +42,7 @@ from rtlsdr_scanner.misc import nearest, limit, get_serial_ports
 class DialogDevicesRTL(wx.Dialog):
     COLS = 10
     COL_SEL, COL_DEV, COL_TUN, COL_SER, COL_IND, \
-        COL_GAIN, COL_CAL, COL_LEVOFF, COL_LO, COL_OFF = range(COLS)
+    COL_GAIN, COL_CAL, COL_LEVOFF, COL_LO, COL_OFF = range(COLS)
 
     def __init__(self, parent, devices, settings):
         self.devices = copy.copy(devices)
@@ -74,7 +74,7 @@ class DialogDevicesRTL(wx.Dialog):
         dc.SetFont(self.gridDev.GetLabelFont())
         maxHeight = 0
         for i in range(self.COLS - 1):
-            _w, h, _hl = dc.GetMultiLineTextExtent(self.gridDev.GetColLabelValue(i))
+            _w, h = dc.GetMultiLineTextExtent(self.gridDev.GetColLabelValue(i))
             if h > maxHeight:
                 maxHeight = h
         self.gridDev.SetColLabelSize(maxHeight * 1.25)
@@ -124,7 +124,7 @@ class DialogDevicesRTL(wx.Dialog):
             self.gridDev.SetCellRenderer(i, self.COL_SEL,
                                          TickCellRenderer())
             if device.isDevice:
-                cell = grid.GridCellChoiceEditor(map(str, device.gains),
+                cell = grid.GridCellChoiceEditor(list(map(str, device.gains)),
                                                  allowOthers=False)
                 self.gridDev.SetCellEditor(i, self.COL_GAIN, cell)
             self.gridDev.SetCellEditor(i, self.COL_CAL,
@@ -338,7 +338,7 @@ class DialogDevicesGPS(wx.Dialog):
     def __set_dev_grid(self):
         self.gridDev.Unbind(grid.EVT_GRID_EDITOR_CREATED)
         self.Unbind(grid.EVT_GRID_CELL_LEFT_CLICK)
-        self.Unbind(grid.EVT_GRID_CELL_CHANGE)
+        self.Unbind(grid.EVT_GRID_CELL_CHANGED)
         self.gridDev.ClearGrid()
 
         i = 0
@@ -379,7 +379,7 @@ class DialogDevicesGPS(wx.Dialog):
 
         self.gridDev.Bind(grid.EVT_GRID_EDITOR_CREATED, self.__on_create)
         self.Bind(grid.EVT_GRID_CELL_LEFT_CLICK, self.__on_click)
-        self.Bind(grid.EVT_GRID_CELL_CHANGE, self.__on_change)
+        self.Bind(grid.EVT_GRID_CELL_CHANGED, self.__on_change)
 
     def __set_button_state(self):
         if len(self.devices) > 0:
@@ -412,8 +412,7 @@ class DialogDevicesGPS(wx.Dialog):
         if col == self.COL_TYPE:
             self.comboType = event.GetControl()
             self.comboType.Bind(wx.EVT_COMBOBOX,
-                                lambda event,
-                                device=device: self.__on_type(event, device))
+                                lambda evt, dev=device: self.__on_type(evt, dev))
         event.Skip()
 
     def __on_check(self, _event):
@@ -548,22 +547,22 @@ class DialogGPSSerial(wx.Dialog):
         sizerButtons.Realize()
         self.Bind(wx.EVT_BUTTON, self.__on_ok, buttonOk)
 
-        grid = wx.GridBagSizer(10, 10)
-        grid.Add(textPort, pos=(0, 0), flag=wx.ALL)
-        grid.Add(self.comboPort, pos=(0, 1), flag=wx.ALL)
-        grid.Add(textBaud, pos=(1, 0), flag=wx.ALL)
-        grid.Add(self.choiceBaud, pos=(1, 1), flag=wx.ALL)
-        grid.Add(textByte, pos=(2, 0), flag=wx.ALL)
-        grid.Add(self.choiceBytes, pos=(2, 1), flag=wx.ALL)
-        grid.Add(textParity, pos=(3, 0), flag=wx.ALL)
-        grid.Add(self.choiceParity, pos=(3, 1), flag=wx.ALL)
-        grid.Add(textStop, pos=(4, 0), flag=wx.ALL)
-        grid.Add(self.choiceStops, pos=(4, 1), flag=wx.ALL)
-        grid.Add(textSoft, pos=(5, 0), flag=wx.ALL)
-        grid.Add(self.checkSoft, pos=(5, 1), flag=wx.ALL)
+        _grid = wx.GridBagSizer(10, 10)
+        _grid.Add(textPort, pos=(0, 0), flag=wx.ALL)
+        _grid.Add(self.comboPort, pos=(0, 1), flag=wx.ALL)
+        _grid.Add(textBaud, pos=(1, 0), flag=wx.ALL)
+        _grid.Add(self.choiceBaud, pos=(1, 1), flag=wx.ALL)
+        _grid.Add(textByte, pos=(2, 0), flag=wx.ALL)
+        _grid.Add(self.choiceBytes, pos=(2, 1), flag=wx.ALL)
+        _grid.Add(textParity, pos=(3, 0), flag=wx.ALL)
+        _grid.Add(self.choiceParity, pos=(3, 1), flag=wx.ALL)
+        _grid.Add(textStop, pos=(4, 0), flag=wx.ALL)
+        _grid.Add(self.choiceStops, pos=(4, 1), flag=wx.ALL)
+        _grid.Add(textSoft, pos=(5, 0), flag=wx.ALL)
+        _grid.Add(self.checkSoft, pos=(5, 1), flag=wx.ALL)
 
         box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(grid, flag=wx.ALL, border=10)
+        box.Add(_grid, flag=wx.ALL, border=10)
         box.Add(sizerButtons, flag=wx.ALL | wx.ALIGN_RIGHT, border=10)
 
         self.SetSizerAndFit(box)
@@ -613,28 +612,27 @@ class DialogGPSTest(wx.Dialog):
         buttonOk = wx.Button(self, wx.ID_OK)
         self.Bind(wx.EVT_BUTTON, self.__on_ok, buttonOk)
 
-        grid = wx.GridBagSizer(10, 10)
+        _grid = wx.GridBagSizer(10, 10)
+        _grid.Add(textLat, pos=(0, 0), flag=wx.ALL, border=5)
+        _grid.Add(self.textLat, pos=(0, 1), span=(1, 2), flag=wx.ALL, border=5)
+        _grid.Add(textLon, pos=(1, 0), flag=wx.ALL, border=5)
+        _grid.Add(self.textLon, pos=(1, 1), span=(1, 2), flag=wx.ALL, border=5)
+        _grid.Add(textAlt, pos=(2, 0), flag=wx.ALL, border=5)
+        _grid.Add(self.textAlt, pos=(2, 1), span=(1, 2), flag=wx.ALL, border=5)
+        _grid.Add(textSats, pos=(3, 0), flag=wx.ALL, border=5)
+        _grid.Add(self.textSats, pos=(3, 1), span=(1, 2), flag=wx.ALL, border=5)
+        _grid.Add(textLevel, pos=(0, 3), flag=wx.ALL, border=5)
+        _grid.Add(self.satLevel, pos=(1, 3), span=(3, 2), flag=wx.ALL, border=5)
+        _grid.Add(textRaw, pos=(4, 0), flag=wx.ALL, border=5)
+        _grid.Add(self.textRaw, pos=(5, 0), span=(5, 5),
+                  flag=wx.ALL | wx.EXPAND, border=5)
+        _grid.Add(self.buttonStart, pos=(10, 2), flag=wx.ALL, border=5)
+        _grid.Add(self.buttonStop, pos=(10, 3), flag=wx.ALL | wx.ALIGN_RIGHT,
+                  border=5)
+        _grid.Add(buttonOk, pos=(11, 4), flag=wx.ALL | wx.ALIGN_RIGHT,
+                  border=5)
 
-        grid.Add(textLat, pos=(0, 0), flag=wx.ALL, border=5)
-        grid.Add(self.textLat, pos=(0, 1), span=(1, 2), flag=wx.ALL, border=5)
-        grid.Add(textLon, pos=(1, 0), flag=wx.ALL, border=5)
-        grid.Add(self.textLon, pos=(1, 1), span=(1, 2), flag=wx.ALL, border=5)
-        grid.Add(textAlt, pos=(2, 0), flag=wx.ALL, border=5)
-        grid.Add(self.textAlt, pos=(2, 1), span=(1, 2), flag=wx.ALL, border=5)
-        grid.Add(textSats, pos=(3, 0), flag=wx.ALL, border=5)
-        grid.Add(self.textSats, pos=(3, 1), span=(1, 2), flag=wx.ALL, border=5)
-        grid.Add(textLevel, pos=(0, 3), flag=wx.ALL, border=5)
-        grid.Add(self.satLevel, pos=(1, 3), span=(3, 2), flag=wx.ALL, border=5)
-        grid.Add(textRaw, pos=(4, 0), flag=wx.ALL, border=5)
-        grid.Add(self.textRaw, pos=(5, 0), span=(5, 5),
-                 flag=wx.ALL | wx.EXPAND, border=5)
-        grid.Add(self.buttonStart, pos=(10, 2), flag=wx.ALL, border=5)
-        grid.Add(self.buttonStop, pos=(10, 3), flag=wx.ALL | wx.ALIGN_RIGHT,
-                 border=5)
-        grid.Add(buttonOk, pos=(11, 4), flag=wx.ALL | wx.ALIGN_RIGHT,
-                 border=5)
-
-        self.SetSizerAndFit(grid)
+        self.SetSizerAndFit(_grid)
 
         self.queue = Queue()
         self.timer = wx.Timer(self)

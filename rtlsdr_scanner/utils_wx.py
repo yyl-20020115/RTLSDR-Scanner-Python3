@@ -23,9 +23,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os
-
 import wx
+from wx import GetTopLevelWindows
+
 from rtlsdr_scanner.misc import get_resource
 
 
@@ -42,7 +42,7 @@ class ValidatorCoord(wx.Validator):
             textCtrl.Refresh()
             return True
 
-        value = None
+        # value = None
         try:
             value = float(text)
             if self.isLat and (value < -90 or value > 90):
@@ -82,7 +82,7 @@ def load_icon(name):
 
 
 def close_modeless():
-    for child in wx.GetTopLevelWindows():
+    for child in GetTopLevelWindows():
         if child.Title == 'Configure subplots':
             child.Close()
 

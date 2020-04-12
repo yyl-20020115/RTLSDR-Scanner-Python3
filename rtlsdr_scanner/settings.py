@@ -26,7 +26,6 @@
 from configparser import ConfigParser
 
 import wx
-from wx._core import Config
 
 from rtlsdr_scanner.constants import Display, Mode, PlotFunc
 from rtlsdr_scanner.devices import DeviceRTL, format_device_rtl_name, DeviceGPS
@@ -168,9 +167,14 @@ class Settings:
         if self.devicesRtl:
             for device in self.devicesRtl:
                 if device.isDevice:
-                    name = device.name
+                    # name = device.name
+                    if type(device.name) is not str:
+                        name = str(device.name, encoding="utf-8")
+                    else:
+                        name = device.name
                 else:
                     name = "{}:{}".format(device.server, device.port)
+
                 self.cfg.SetPath("/DevicesRTL/" + format_device_rtl_name(name))
                 self.cfg.Write('serial', device.serial)
                 self.cfg.WriteBool('isDevice', device.isDevice)
@@ -196,10 +200,8 @@ class Settings:
             self.cfg.WriteBool('soft', device.soft)
 
     def __load(self):
-        self.cfg = Config('rtlsdr-scanner')
-
+        self.cfg = wx.FileConfig('rtlsdr-scanner')
         self.cfg.RenameGroup('Devices', 'DevicesRTL')
-
         self.display = self.cfg.ReadInt('display', self.display)
         self.saveWarn = self.cfg.ReadBool('saveWarn', self.saveWarn)
         self.backup = self.cfg.ReadBool('backup', self.backup)
@@ -258,7 +260,8 @@ class Settings:
         self.__load_devices_rtl()
         self.__load_devices_gps()
 
-    def __check_conf_serial(self, device):
+    @staticmethod
+    def __check_conf_serial(device):
         if device.type not in range(len(DeviceGPS.TYPE)):
             return 'Type "{}" should be between 0 and {}'.format(device.type,
                                                                  len(DeviceGPS.TYPE) - 1)
@@ -302,10 +305,10 @@ class Settings:
                 self.devicesGps.append(device)
                 return self.__check_conf_serial(device)
 
-        except ConfigParser.Error as e:
-            return e.message
-        except ValueError as e:
-            return e.message
+        except ConfigParser.Error as e1:
+            return str(e1)
+        except ValueError as e2:
+            return str(e2)
 
     def save(self):
         self.cfg.SetPath("/")

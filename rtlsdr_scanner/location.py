@@ -22,10 +22,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import urlparse
-
-#from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 import json
 import mimetypes
 import os
@@ -33,7 +29,9 @@ import select
 import socket
 import threading
 import time
-import urllib
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse
+from urllib.request import pathname2url
 
 import serial
 from serial.serialutil import SerialException
@@ -43,7 +41,6 @@ from rtlsdr_scanner.devices import DeviceGPS
 from rtlsdr_scanner.events import post_event, EventThread, Event, Log
 from rtlsdr_scanner.misc import format_iso_time, haversine, format_time, \
     limit_to_ascii, limit, get_resource
-
 
 TIMEOUT = 15
 
@@ -121,7 +118,7 @@ class ThreadLocation(threading.Thread):
             for _error in errors:
                 post_event(self._notify, EventThread(Event.LOC_ERR,
                                                      0,
-                                                     'Connection dropped'))
+                                                     'Connection dropped:' + str(_error)))
         return
 
     def __serial_timeout(self):
@@ -145,7 +142,7 @@ class ThreadLocation(threading.Thread):
 
         except SerialException as error:
             post_event(self._notify, EventThread(Event.LOC_ERR,
-                                                 0, error.message))
+                                                 0, str(error)))
             return False
         except OSError as error:
             post_event(self._notify, EventThread(Event.LOC_ERR,
@@ -304,7 +301,7 @@ class ThreadLocation(threading.Thread):
         if message == 1:
             self._sats.clear()
 
-        blocks = (len(data) - 4) / 4
+        blocks = int((len(data) - 4) / 4)
         for i in range(0, blocks):
             sat = int(data[4 + i * 4])
             level = data[7 + i * 4]
@@ -435,7 +432,7 @@ class LocationServerHandler(BaseHTTPRequestHandler):
                   '\t\t\t\t<begin>{}</begin>\n'
                   '\t\t\t\t<end>{}</end>\n'
                   '\t\t\t</gx:TimeSpan>\n'
-                  '\t\t</LookAt>\n').\
+                  '\t\t</LookAt>\n'). \
             format(latCen, lonCen, dist * 2, begin, end)
 
         return lookAt
@@ -453,10 +450,10 @@ class LocationServerHandler(BaseHTTPRequestHandler):
                 '\t\t\t<Point>\n').format(format_time(loc[3]))
 
         if loc[2] is None:
-            last += '\t\t\t\t<coordinates>{},{}</coordinates>\n'.\
+            last += '\t\t\t\t<coordinates>{},{}</coordinates>\n'. \
                 format(loc[1], loc[0])
         else:
-            last += '\t\t\t\t<coordinates>{},{},{}</coordinates>\n'.\
+            last += '\t\t\t\t<coordinates>{},{},{}</coordinates>\n'. \
                 format(loc[1], loc[0], loc[2])
 
         last += ('\t\t\t</Point>\n'
@@ -468,24 +465,24 @@ class LocationServerHandler(BaseHTTPRequestHandler):
         if not len(self.server.locations):
             return ''
 
-        track = ('\t\t<Placemark>\n'
-                 '\t\t\t<name>Track</name>\n'
-                 '\t\t\t<description>{} locations</description>\n'
-                 '\t\t\t<styleUrl>#track</styleUrl>\n'
-                 '\t\t\t<gx:Track>\n'
-                 '\t\t\t\t<altitudeMode>clampToGround</altitudeMode>\n').\
-            format(len(self.server.locations))
+        track = "{0}{1}".format(('\t\t<Placemark>\n'
+                                 '\t\t\t<name>Track</name>\n'
+                                 '\t\t\t<description>{} locations</description>\n'
+                                 '\t\t\t<styleUrl>#track</styleUrl>\n'
+                                 '\t\t\t<gx:Track>\n'
+                                 '\t\t\t\t<altitudeMode>clampToGround</altitudeMode>\n'),
+                                format(len(self.server.locations)))
 
         with self.server.lock:
             for timeStamp in sorted(self.server.locations):
                 lat, lon, alt = self.server.locations[timeStamp]
                 timeStr = format_iso_time(timeStamp)
                 if alt is None:
-                    track += '\t\t\t\t<gx:coord>{} {}</gx:coord>\n'.\
+                    track += '\t\t\t\t<gx:coord>{} {}</gx:coord>\n'. \
                         format(lon, lat)
 
                 else:
-                    track += '\t\t\t\t<gx:coord>{} {} {}</gx:coord>\n'.\
+                    track += '\t\t\t\t<gx:coord>{} {} {}</gx:coord>\n'. \
                         format(lon, lat, alt)
                 track += '\t\t\t\t<when>{}</when>\n'.format(timeStr)
 
@@ -501,42 +498,42 @@ class LocationServerHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         self.wfile.write('<?xml version="1.0" encoding="UTF-8"?>\n'
-                         '<kml xmlns="http://www.opengis.net/kml/2.2" '
-                         'xmlns:gx="http://www.google.com/kml/ext/2.2">\n')
+                         + '<kml xmlns="http://www.opengis.net/kml/2.2" '
+                         + 'xmlns:gx="http://www.google.com/kml/ext/2.2">\n')
 
         self.wfile.write(('\t<Document>\n'
-                          '\t\t<name>{}</name>\n').format(APP_NAME))
+                          + '\t\t<name>{}</name>\n').format(APP_NAME))
 
         self.wfile.write(self.__create_lookat())
 
         self.wfile.write(('\t\t<Style id="last">\n'
-                          '\t\t\t<IconStyle>\n'
-                          '\t\t\t\t<Icon>\n'
-                          '\t\t\t\t\t<href>http://localhost:{}/crosshair.png</href>\n'
-                          '\t\t\t\t</Icon>\n'
-                          '\t\t\t\t<hotSpot x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>\n'
-                          '\t\t\t\t<scale>2</scale>\n'
-                          '\t\t\t</IconStyle>\n'
-                          '\t\t</Style>\n').format(LOCATION_PORT))
+                          + '\t\t\t<IconStyle>\n'
+                          + '\t\t\t\t<Icon>\n'
+                          + '\t\t\t\t\t<href>http://localhost:{}/crosshair.png</href>\n'
+                          + '\t\t\t\t</Icon>\n'
+                          + '\t\t\t\t<hotSpot x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>\n'
+                          + '\t\t\t\t<scale>2</scale>\n'
+                          + '\t\t\t</IconStyle>\n'
+                          + '\t\t</Style>\n').format(LOCATION_PORT))
 
         self.wfile.write('\t\t<Style id="track">\n'
-                         '\t\t\t<LineStyle>\n'
-                         '\t\t\t\t<color>7f0000ff</color>\n'
-                         '\t\t\t\t<width>4</width>\n'
-                         '\t\t\t</LineStyle>\n'
-                         '\t\t\t<IconStyle>\n'
-                         '\t\t\t\t<scale>0</scale>\n'
-                         '\t\t\t</IconStyle>\n'
-                         '\t\t\t<LabelStyle>\n'
-                         '\t\t\t\t<scale>0</scale>\n'
-                         '\t\t\t</LabelStyle>\n'
-                         '\t\t</Style>\n')
+                         + '\t\t\t<LineStyle>\n'
+                         + '\t\t\t\t<color>7f0000ff</color>\n'
+                         + '\t\t\t\t<width>4</width>\n'
+                         + '\t\t\t</LineStyle>\n'
+                         + '\t\t\t<IconStyle>\n'
+                         + '\t\t\t\t<scale>0</scale>\n'
+                         + '\t\t\t</IconStyle>\n'
+                         + '\t\t\t<LabelStyle>\n'
+                         + '\t\t\t\t<scale>0</scale>\n'
+                         + '\t\t\t</LabelStyle>\n'
+                         + '\t\t</Style>\n')
 
         self.wfile.write(self.__create_last())
         self.wfile.write(self.__create_track())
 
         self.wfile.write('\t</Document>\n'
-                         '</kml>\n')
+                         + '</kml>\n')
 
     def __send_geojson(self):
         self.send_response(200)
@@ -574,11 +571,11 @@ class LocationServerHandler(BaseHTTPRequestHandler):
         localFile = get_resource(filename)
         if os.path.isdir(localFile) or not os.path.exists(localFile):
             self.send_error(404)
-            self.server.log.add('File not found: {}'.format(self.path),
-                                Log.WARN)
+            self.log_message('File not found: {}'.format(self.path),
+                             Log.WARN)
             return
 
-        urlFile = urllib.pathname2url(localFile)
+        urlFile = pathname2url(localFile)
         self.send_response(200)
         self.send_header('Content-type', mimetypes.guess_type(urlFile)[0])
         self.end_headers()

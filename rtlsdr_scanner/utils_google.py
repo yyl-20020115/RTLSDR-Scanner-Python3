@@ -24,20 +24,22 @@
 #
 from rtlsdr_scanner.constants import APP_NAME, LOCATION_PORT
 
+
 def create_gearth(handle):
-    handle.write('<?xml version="1.0" encoding="UTF-8"?>\n'
-                 '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
-                 '\t<NetworkLink>\n'
-                 '\t\t<name>{}</name>\n'
-                 '\t\t<flyToView>1</flyToView>\n'
-                 '\t\t<open>1</open>\n'
-                 '\t\t<Link>\n'
-                 '\t\t\t<href>http://localhost:{}/kml</href>\n'
-                 '\t\t\t<refreshMode>onInterval</refreshMode>\n'
-                 '\t\t\t<refreshInterval>10</refreshInterval>\n'
-                 '\t\t</Link>\n'
-                 '\t</NetworkLink>\n'
-                 '</kml>\n'.format(APP_NAME, LOCATION_PORT))
+    handle.write(bytes('<?xml version="1.0" encoding="UTF-8"?>\n'
+                       '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
+                       '\t<NetworkLink>\n'
+                       '\t\t<name>{}</name>\n'
+                       '\t\t<flyToView>1</flyToView>\n'
+                       '\t\t<open>1</open>\n'
+                       '\t\t<Link>\n'
+                       '\t\t\t<href>http://localhost:{}/kml</href>\n'
+                       '\t\t\t<refreshMode>onInterval</refreshMode>\n'
+                       '\t\t\t<refreshInterval>10</refreshInterval>\n'
+                       '\t\t</Link>\n'
+                       '\t</NetworkLink>\n'
+                       '</kml>\n'.format(APP_NAME, LOCATION_PORT), encoding="utf-8"))
+
 
 if __name__ == '__main__':
     print('Please run rtlsdr_scan.py')

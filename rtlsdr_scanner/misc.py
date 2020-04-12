@@ -81,7 +81,7 @@ def get_resource(resource):
     if not hasattr(sys, 'frozen'):
         return pkg_resources.resource_filename('rtlsdr_scanner.res',
                                                resource)
-    else:
+    else:  # sys._MEIPASS is for python2
         return os.path.join(sys._MEIPASS, 'res', resource)
 
 
@@ -135,7 +135,7 @@ def get_dwells():
 def calc_real_dwell(dwell):
     samples = calc_samples(dwell)
     dwellReal = samples / SAMPLE_RATE
-    return (int)(dwellReal * 1000.0) / 1000.0
+    return int(dwellReal * 1000.0) / 1000.0
 
 
 def nearest(value, values):
@@ -175,7 +175,7 @@ def format_precision(settings, freq=None, level=None,
             textLevel += " dB/Hz"
 
     if textFreq and textLevel:
-        return (textFreq, textLevel)
+        return textFreq, textLevel
     if textFreq:
         return textFreq
     if textLevel:

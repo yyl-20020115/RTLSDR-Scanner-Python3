@@ -65,7 +65,7 @@ class Extent:
                 self.fMin = min(self.fMin, fMin)
                 self.fMax = max(self.fMax, fMax)
                 self.lMin = min(self.lMin, lMin)
-                if(lMax >= self.lMax):
+                if lMax >= self.lMax:
                     self.lMax = lMax
                     self.fPeak, self.lPeak = max(points, key=lambda f_l: f_l[1])
                     self.tPeak = timeStamp
@@ -227,7 +227,7 @@ def reduce_points(spectrum, limit):
 
 def split_spectrum(spectrum):
     freqs = spectrum.keys()
-    powers = map(spectrum.get, freqs)
+    powers = list(map(spectrum.get, freqs))
 
     return freqs, powers
 
@@ -359,6 +359,7 @@ def get_peaks(spectrum, threshold):
 
     indices = (numpy.diff(numpy.sign(numpy.diff(sweep.values()))) < 0).nonzero()[0] + 1
     return sweep, indices
+
 
 if __name__ == '__main__':
     print('Please run rtlsdr_scan.py')

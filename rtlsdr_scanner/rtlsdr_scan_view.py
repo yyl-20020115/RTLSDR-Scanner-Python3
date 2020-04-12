@@ -25,7 +25,6 @@
 
 
 import argparse
-#from os.path import os
 import os
 import sys
 import wx
@@ -36,11 +35,12 @@ from rtlsdr_scanner.spectrum import sort_spectrum
 
 if not hasattr(sys, 'frozen'):
     import visvis as vv
+
     app = vv.use('wx')
 
 
 class MainWindow(wx.Frame):
-    def __init__(self, args=None):
+    def __init__(self, m_args=None):
         settings = Settings()
         self.directory = settings.dirScans
 
@@ -58,7 +58,7 @@ class MainWindow(wx.Frame):
         panel.SetSizer(sizer)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(fig._widget, 1, wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(fig, 1, wx.EXPAND | wx.ALL, border=5)
         sizer.Add(panel, 0, wx.EXPAND | wx.ALL, border=5)
 
         self.SetSizer(sizer)
@@ -67,9 +67,9 @@ class MainWindow(wx.Frame):
 
         self.Show()
 
-        if args.file is not None:
-            if os.path.exists(args.file):
-                self.__open(*os.path.split(args.file))
+        if m_args.file is not None:
+            if os.path.exists(m_args.file):
+                self.__open(*os.path.split(m_args.file))
             else:
                 wx.MessageBox('File not found', 'Error', wx.OK | wx.ICON_ERROR)
 
@@ -77,7 +77,7 @@ class MainWindow(wx.Frame):
         dlg = wx.FileDialog(self, "Open a scan", self.directory,
                             '',
                             File.get_type_filters(File.Types.SAVE),
-                            wx.OPEN)
+                            wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             self.__open(dlg.GetDirectory(), dlg.GetFilename())
         dlg.Destroy()
@@ -107,9 +107,9 @@ def __arguments():
     parser = argparse.ArgumentParser(prog="rtlsdr_scan_view.py",
                                      description='A quick viewer for scans')
     parser.add_argument("file", help=help, nargs='?')
-    args = parser.parse_args()
+    m_args = parser.parse_args()
 
-    return args
+    return m_args
 
 
 if __name__ == '__main__':

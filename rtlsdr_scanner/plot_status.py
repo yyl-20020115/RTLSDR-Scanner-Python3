@@ -39,10 +39,10 @@ class PlotterStatus:
         self.settings = settings
         self.axes = None
         self.threadPlot = None
-
+        self.barBase = None
         self.__setup_plot()
         self.set_grid(self.settings.grid)
-        self.set_plot(None, None, None)
+        self.set_plot(None, None, False)
 
     def __setup_plot(self):
         self.axes = self.figure.add_subplot(111)

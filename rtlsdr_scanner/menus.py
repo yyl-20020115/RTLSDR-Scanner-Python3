@@ -145,15 +145,15 @@ class MenuMain:
         self.log = tools.Append(wx.ID_ANY, "&Log...",
                                 "Program log")
 
-        help = wx.Menu()
-        self.helpLink = help.Append(wx.ID_HELP, "&Help...",
-                                    "Link to help")
-        help.AppendSeparator()
-        self.sys = help.Append(wx.ID_ANY, "&System information...",
-                               "Displays system information")
-        help.AppendSeparator()
-        self.about = help.Append(wx.ID_ABOUT, "&About...",
-                                 "Information about this program")
+        mhelp = wx.Menu()
+        self.helpLink = mhelp.Append(wx.ID_HELP, "&Help...",
+                                     "Link to help")
+        mhelp.AppendSeparator()
+        self.sys = mhelp.Append(wx.ID_ANY, "&System information...",
+                                "Displays system information")
+        mhelp.AppendSeparator()
+        self.about = mhelp.Append(wx.ID_ABOUT, "&About...",
+                                  "Information about this program")
 
         menuBar = wx.MenuBar()
         menuBar.Append(file, "&File")
@@ -161,7 +161,7 @@ class MenuMain:
         menuBar.Append(view, "&View")
         menuBar.Append(scan, "&Scan")
         menuBar.Append(tools, "&Tools")
-        menuBar.Append(help, "&Help")
+        menuBar.Append(mhelp, "&Help")
         self.menuBar = menuBar
 
     def set_state(self, state, spectrum, locations):

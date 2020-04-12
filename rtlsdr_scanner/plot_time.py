@@ -33,6 +33,7 @@ from rtlsdr_scanner.utils_mpl import utc_to_mpl, set_date_ticks
 
 class PlotterTime:
     def __init__(self, notify, figure, settings):
+        self.barBase = None
         self.notify = notify
         self.figure = figure
         self.settings = settings

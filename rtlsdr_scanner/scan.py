@@ -23,14 +23,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from collections import OrderedDict
-import itertools
 import math
 import threading
 import time
+from collections import OrderedDict
 
 import matplotlib
 import rtlsdr
+from matplotlib.mlab import psd
 
 from rtlsdr_scanner.constants import SAMPLE_RATE, BANDWIDTH, WINFUNC
 from rtlsdr_scanner.events import EventThread, Event, post_event
@@ -68,7 +68,8 @@ class ThreadScan(threading.Thread):
     def __f_stop(self):
         return self.fstop + self.offset + BANDWIDTH * 2
 
-    def __f_step(self):
+    @staticmethod
+    def __f_step():
         return BANDWIDTH / 2
 
     def __rtl_setup(self):
@@ -176,11 +177,11 @@ class ThreadProcess(threading.Thread):
         pos = WINFUNC[::2].index(self.winFunc)
         function = WINFUNC[1::2][pos]
 
-        powers, freqs = matplotlib.mlab.psd(samples,
-                                            NFFT=self.nfft,
-                                            Fs=SAMPLE_RATE / 1e6,
-                                            window=function(self.nfft))
-        for freqPsd, pwr in itertools.izip(freqs, powers):
+        powers, freqs = psd(samples,
+                            NFFT=self.nfft,
+                            Fs=SAMPLE_RATE / 1e6,
+                            window=function(self.nfft))
+        for freqPsd, pwr in zip(freqs, powers):
             xr = freqPsd + (self.freq / 1e6)
             xr = xr + (xr * self.cal / 1e6)
             spectrum[xr] = pwr * self.levelOff
@@ -215,7 +216,7 @@ def update_spectrum(notify, lock, start, stop, data, offset,
             if start <= freq < stop:
                 power = 10 * math.log10(scan[freq])
                 if upperStart <= freq * 1e6 <= upperEnd or \
-                   lowerStart <= freq * 1e6 <= lowerEnd:
+                        lowerStart <= freq * 1e6 <= lowerEnd:
                     if freq in spectrum[timeStamp]:
                         spectrum[timeStamp][freq] = \
                             (spectrum[timeStamp][freq] + power) / 2

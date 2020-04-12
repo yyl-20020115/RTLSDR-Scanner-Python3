@@ -40,7 +40,7 @@ LIBS = [('wx', 'wxPython', 'http://www.wxpython.org/download.php', True, True),
 def try_import(library):
     try:
         __import__(library)
-    except:
+    except ImportError:
         return False
 
     return True
@@ -58,14 +58,13 @@ def find_rtlsdr_driver():
             CDLL(driver)
             path = driver
             break
-        except:
+        except OSError:
             pass
 
     return path
 
 
 if __name__ == '__main__':
-
 
     print('rtlsdr_scan_diag\n')
     print('Tests for missing libraries\n')
@@ -105,7 +104,8 @@ if __name__ == '__main__':
         if problem:
             print('\nProblems found, please install the libraries for Python {}.{}'.format(version[0], version[1]))
             print(
-                'Further instructions can be found at http://eartoearoak.com/software/rtlsdr-scanner/rtlsdr-scanner-installation')
+                'Further instructions can be found at http://eartoearoak.com/software/rtlsdr-scanner/rtlsdr-scanner'
+                '-installation')
         else:
             print('No problems found')
             print('\nUsing driver {}'.format(find_rtlsdr_driver()))

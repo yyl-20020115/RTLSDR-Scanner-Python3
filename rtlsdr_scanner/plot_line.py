@@ -57,14 +57,14 @@ class ColorBarPlus(ScalarMappable,ColorbarBase):
                  extend='neither',
                  spacing='uniform',  # uniform or proportional
                  ticks=None,
-                 format=None,
+                 _format=None,
                  drawedges=False,
                  filled=True,
                  extendfrac=None,
                  extendrect=False,
                  label='',
                  ):
-        ColorbarBase.__init__(self,ax,cmap,norm,alpha,values,boundaries,orientation,ticklocation,extend,spacing,ticks,format,drawedges,filled,extendfrac,extendrect,label)
+        ColorbarBase.__init__(self, ax, cmap, norm, alpha, values, boundaries, orientation, ticklocation, extend, spacing, ticks, _format, drawedges, filled, extendfrac, extendrect, label)
         ScalarMappable.__init__(self,norm,cmap)
 
 
@@ -260,13 +260,14 @@ class Plotter:
             self.overflow['right'].append(marker)
 
     def __draw_overflow(self):
-        for pos, overflow in self.overflow.iteritems():
+        for pos, overflow in self.overflow.items():
             if len(overflow) > 0:
                 text = ''
                 for measure in overflow:
                     if len(text) > 0:
                         text += '\n'
                     text += self.labels[measure].get_text()
+                textMath = ""
 
                 label = self.overflowLabels[pos]
                 if pos == 'top':
@@ -344,7 +345,7 @@ class Plotter:
                     collection.set_norm(norm)
                 try:
                     self.barBase.draw_all()
-                except:
+                except RuntimeError:
                     pass
 
     def redraw_plot(self):
@@ -427,10 +428,10 @@ class Plotter:
         else:
             self.set_bar(True)
         self.barBase.set_cmap(colourMap)
-        #ScalarMappable
+
         try:
             self.barBase.draw_all()
-        except:
+        except RuntimeError:
             pass
 
     def close(self):
@@ -460,7 +461,7 @@ class ThreadPlot(threading.Thread):
         if self.data is None:
             self.parent.threadPlot = None
             return
-
+        peakF, peakL = 0, 0
         total = len(self.data)
         if total > 0:
             self.parent.clear_plots()
@@ -498,6 +499,7 @@ class ThreadPlot(threading.Thread):
     def __plot_all(self, spectrum):
         total = len(spectrum)
         count = 0.0
+        peakF, peakL = 0, 0
         for timeStamp in spectrum:
             if self.settings.fadeScans:
                 alpha = (count + 1) / total
@@ -570,7 +572,7 @@ class ThreadPlot(threading.Thread):
         lastX = None
         lastYMin = None
         lastYMax = None
-        for x in pointsMin.iterkeys():
+        for x in pointsMin.keys():
             if lastX is None:
                 lastX = x
             if lastYMin is None:
@@ -688,7 +690,7 @@ class ThreadPlot(threading.Thread):
         levels = []
 
         if len(points):
-            prev = points[0]
+            prev = next(iter(points))
             for point in points:
                 segment = [prev, point]
                 segments.append(segment)

@@ -25,11 +25,14 @@
 #
 try:
     import matplotlib
+
     matplotlib.interactive(True)
     matplotlib.use('WXAgg')
     import rtlsdr  # @UnusedImport
     import wx  # @UnusedImport
 except ImportError as error:
+    import matplotlib
+    import wx
     print('Import error: {}'.format(error))
     input('\nError importing libraries\nPress [Return] to exit')
     exit(1)
@@ -42,15 +45,17 @@ import sys
 if not hasattr(sys, 'frozen'):
     try:
         import visvis as vv
-        vv.use('wx')
-    except ImportError:
-        pass
 
+        vv.use('wx')
+    except ImportError as ie:
+        import visvis as vv
+        pass
 
 from rtlsdr_scanner.constants import APP_NAME
 from rtlsdr_scanner.file import File
 from rtlsdr_scanner.main_window import FrameMain, RtlSdrScanner
 from rtlsdr_scanner.cli import Cli
+
 
 def __init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -82,31 +87,31 @@ def __arguments():
     group.add_argument("-r", "--remote", help="Server IP and port", type=str)
     types = File.get_type_pretty(File.Types.SAVE)
     types += File.get_type_pretty(File.Types.PLOT)
-    help = 'Output file (' + types + ')'
-    parser.add_argument("file", help=help, nargs='?')
-    args = parser.parse_args()
+    m_help = 'Output file (' + types + ')'
+    parser.add_argument("file", help=m_help, nargs='?')
+    m_args = parser.parse_args()
 
-    error = None
-    isGui = True
-    if args.start is not None or args.end is not None:
-        if args.start is not None:
-            if args.end is not None:
-                if args.file is not None:
-                    isGui = False
+    m_error = None
+    m_isGui = True
+    if m_args.start is not None or m_args.end is not None:
+        if m_args.start is not None:
+            if m_args.end is not None:
+                if m_args.file is not None:
+                    m_isGui = False
                 else:
-                    error = "No filename specified"
+                    m_error = "No filename specified"
             else:
-                error = "No end frequency specified"
+                m_error = "No end frequency specified"
         else:
-            error = "No start frequency specified"
-    elif args.file is not None:
-        args.dirname, args.filename = os.path.split(args.file)
+            m_error = "No start frequency specified"
+    elif m_args.file is not None:
+        m_args.dirname, m_args.filename = os.path.split(m_args.file)
 
-    if error is not None:
-        print("Error: {}".format(error))
+    if m_error is not None:
+        print("Error: {}".format(m_error))
         parser.exit(1)
 
-    return isGui, (args)
+    return m_isGui, m_args
 
 
 if __name__ == '__main__':
@@ -120,6 +125,7 @@ if __name__ == '__main__':
         frame = FrameMain(APP_NAME)
         if args.file is not None:
             frame.open(os.path.abspath(args.dirname), args.filename)
+        app.SetTopWindow(frame)
         app.MainLoop()
     else:
         try:

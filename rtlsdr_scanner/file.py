@@ -34,8 +34,7 @@ import tempfile
 import threading
 import uuid
 import zipfile
-from filecmp import cmp
-from pickle import dump, load
+from pickle import dump, load, UnpicklingError, PickleError
 
 from PIL import Image
 import matplotlib
@@ -113,21 +112,20 @@ class File:
     VERSION = 9
 
     @staticmethod
-    def __get_types(type):
+    def __get_types(f_type):
         return [File.SAVE, File.PLOT, File.IMAGE,
-                File.GEO, File.GMAP, File.TRACK, File.CONT][type]
+                File.GEO, File.GMAP, File.TRACK, File.CONT][f_type]
 
     @staticmethod
-    def get_type_ext(index, type=Types.PLOT):
-        types = File.__get_types(type)
-        filter = types[index]
-        delim = filter.index('|*')
-        return filter[delim + 2:]
+    def get_type_ext(index, f_type=Types.PLOT):
+        types = File.__get_types(f_type)
+        f_filter = types[index]
+        delimiter = f_filter.index('|*')
+        return f_filter[delimiter + 2:]
 
     @staticmethod
-    def get_type_filters(type=Types.PLOT):
-        types = File.__get_types(type)
-
+    def get_type_filters(f_type=Types.PLOT):
+        types = File.__get_types(f_type)
         filters = ''
         length = len(types)
         for i in range(length):
@@ -138,13 +136,12 @@ class File:
         return filters
 
     @staticmethod
-    def get_type_pretty(type):
-        types = File.__get_types(type)
-
+    def get_type_pretty(f_type):
+        types = File.__get_types(f_type)
         pretty = ''
         length = len(types)
         for i in range(length):
-            pretty += File.get_type_ext(i, type)
+            pretty += File.get_type_ext(i, f_type)
             if i < length - 2:
                 pretty += ', '
             elif i < length - 1:
@@ -153,10 +150,10 @@ class File:
         return pretty
 
     @staticmethod
-    def get_type_index(extension, type=Types.PLOT):
-        exports = File.__get_types(type)
+    def get_type_index(extension, f_type=Types.PLOT):
+        exports = File.__get_types(f_type)
         for i in range(len(exports)):
-            if extension == File.get_type_ext(i, type):
+            if extension == File.get_type_ext(i, f_type):
                 return i
 
         return -1
@@ -229,12 +226,11 @@ class Backups:
             else:
                 try:
                     os.remove(backup)
-                except:
+                except OSError:
                     pass
-        #files.sort(lambda x, y: cmp(x[1], y[1]), reverse=True)
+
         files.sort()
-
-
+        files.reverse()
         return files
 
     def __save(self, data):
@@ -256,7 +252,7 @@ class Backups:
     def load(self, index):
         backup = self.backups[index][0]
         handle = open(backup, 'rb')
-        data = cPickle.load(handle)
+        data = load(handle)
         handle.close()
 
         return data
@@ -297,15 +293,17 @@ def open_plot(dirname, filename):
     lat = None
     lon = None
     desc = ''
+    start = 0
+    stop = 0
     location = OrderedDict()
-
+    header = File.HEADER
     path = os.path.join(dirname, filename)
     if not os.path.exists(path):
         return None, None, None
     handle = open(path, 'rb')
     try:
-        header = cPickle.load(handle)
-    except cPickle.UnpicklingError:
+        header = load(handle)
+    except UnpicklingError:
         pickle = False
     except EOFError:
         pickle = False
@@ -317,7 +315,7 @@ def open_plot(dirname, filename):
             stop = load(handle)
             spectrum[1] = {}
             spectrum[1] = load(handle)
-        except pickle.PickleError:
+        except PickleError:
             error = True
     else:
         try:
@@ -383,9 +381,7 @@ def open_plot(dirname, filename):
     scanInfo.lat = lat
     scanInfo.lon = lon
     scanInfo.desc = desc
-
     spectrum = sort_spectrum(spectrum)
-
     return scanInfo, spectrum, location
 
 
@@ -408,7 +404,7 @@ def save_plot(filename, scanInfo, spectrum, location):
                           'Location': location}]
 
     handle = open(os.path.join(filename), 'wb')
-    handle.write(json.dumps(data, indent=4))
+    handle.write(bytes(json.dumps(data, indent=4), encoding="utf-8"))
     handle.close()
 
 
@@ -435,7 +431,7 @@ def export_cont(handle, filename, spectrum):
     return handle
 
 
-def export_image(filename, format, figure, settings):
+def export_image(filename, i_format, figure, settings):
     oldSize = figure.get_size_inches()
     oldDpi = figure.get_dpi()
     figure.set_size_inches((settings.exportWidth, settings.exportHeight))
@@ -451,7 +447,7 @@ def export_image(filename, format, figure, settings):
     size = canvas.get_width_height()
     image = Image.frombuffer('RGBA', size, buf, 'raw', 'RGBA', 0, 1)
     image = image.convert('RGB')
-    ext = File.get_type_ext(format, File.Types.IMAGE)
+    ext = File.get_type_ext(i_format, File.Types.IMAGE)
     image.save(filename, format=ext[1::], dpi=(settings.exportDpi,
                                                settings.exportDpi))
 
@@ -570,26 +566,28 @@ def export_kmz(filename, bounds, image):
     image.save('{}/{}'.format(tempPath, filePng))
 
     handle = open('{}/{}'.format(tempPath, fileKml), 'wb')
-    handle.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-    handle.write('<kml xmlns="http://www.opengis.net/kml/2.2" '
-                 'xmlns:gx="http://www.google.com/kml/ext/2.2" '
-                 'xmlns:kml="http://www.opengis.net/kml/2.2" '
-                 'xmlns:atom="http://www.w3.org/2005/Atom">\n')
-    handle.write('<GroundOverlay>\n')
-    handle.write('\t<name>{} - {}</name>\n'.format(APP_NAME, name))
-    handle.write('\t<Icon>\n')
-    handle.write('\t\t<href>files/{}</href>\n'.format(filePng))
-    handle.write('\t\t<viewBoundScale>0.75</viewBoundScale>\n')
-    handle.write('\t</Icon>\n')
-    handle.write('\t<LatLonBox>\n')
-    handle.write('\t\t<north>{}</north>\n'.format(bounds[3]))
-    handle.write('\t\t<south>{}</south>\n'.format(bounds[2]))
-    handle.write('\t\t<east>{}</east>\n'.format(bounds[1]))
-    handle.write('\t\t<west>{}</west>\n'.format(bounds[0]))
-    handle.write('\t</LatLonBox>\n')
-    handle.write('</GroundOverlay>\n')
-    handle.write('</kml>\n')
-    handle.close()
+
+    s = '<?xml version="1.0" encoding="UTF-8"?>\n' \
+        '<kml xmlns="http://www.opengis.net/kml/2.2" ' \
+        'xmlns:gx="http://www.google.com/kml/ext/2.2" ' \
+        'xmlns:kml="http://www.opengis.net/kml/2.2" ' \
+        'xmlns:atom="http://www.w3.org/2005/Atom">\n' \
+        '<GroundOverlay>\n' \
+        '\t<name>{} - {}</name>\n'.format(APP_NAME, name) \
+        + '\t<Icon>\n' \
+        + '\t\t<href>files/{}</href>\n'.format(filePng) \
+        + '\t\t<viewBoundScale>0.75</viewBoundScale>\n' \
+        + '\t</Icon>\n' \
+        + '\t<LatLonBox>\n' \
+        + '\t\t<north>{}</north>\n'.format(bounds[3]) \
+        + '\t\t<south>{}</south>\n'.format(bounds[2]) \
+        + '\t\t<east>{}</east>\n'.format(bounds[1]) \
+        + '\t\t<west>{}</west>\n'.format(bounds[0]) \
+        + '\t</LatLonBox>\n' \
+        + '</GroundOverlay>\n' \
+        + '</kml>\n'
+
+    handle.write(bytes(s, encoding="utf-8"))
 
     kmz = zipfile.ZipFile(filename, 'w')
     kmz.write('{}/{}'.format(tempPath, fileKml),
@@ -605,9 +603,9 @@ def export_kmz(filename, bounds, image):
 
 def export_xyz(filename, xyz):
     handle = open(filename, 'wb')
-    handle.write('x, y, Level (dB/Hz)\n')
+    handle.write(bytes('x, y, Level (dB/Hz)\n', encoding="utf-8"))
     for i in range(len(xyz[0])):
-        handle.write('{}, {}, {}\n'.format(xyz[0][i], xyz[1][i], xyz[2][i]))
+        handle.write(bytes("{}, {}, {}\n".format(xyz[0][i], xyz[1][i], xyz[2][i]), encoding="utf-8"))
     handle.close()
 
 
@@ -624,7 +622,7 @@ def export_gpx(filename, locations, name):
               '\t<trk>\n'
               '\t\t<name>{}</name>\n'
               '\t\t<trkseg>\n').format(name, 'test name')
-    handle.write(header)
+    handle.write(bytes(header, encoding="utf-8"))
 
     for location in sorted(locations.items()):
         timeStamp = format_iso_time(location[0])
@@ -635,12 +633,12 @@ def export_gpx(filename, locations, name):
                  '\t\t\t\t<ele>{}</ele>\n'
                  '\t\t\t\t<time>{}</time>\n'
                  '\t\t\t</trkpt>\n').format(lat, lon, alt, timeStamp)
-        handle.write(point)
+        handle.write(bytes(point, encoding="utf-8"))
 
     footer = ('\t\t</trkseg>\n'
               '\t</trk>\n'
               '</gpx>\n')
-    handle.write(footer)
+    handle.write(bytes(footer, encoding="utf-8"))
     handle.close()
 
 

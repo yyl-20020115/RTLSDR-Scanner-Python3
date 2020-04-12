@@ -183,7 +183,7 @@ class Cli:
                     return False
 
     def __gps_stop(self):
-        if self.threadLocation and self.threadLocation.isAlive():
+        if self.threadLocation and self.threadLocation.is_alive():
             self.threadLocation.stop()
 
     def __scan(self, sweeps, settings, index):
@@ -194,7 +194,7 @@ class Cli:
             print('\nSweep {}:'.format(sweep + 1))
             threadScan = ThreadScan(self.queueNotify, self.queueScan, None,
                                     settings, index, samples, False)
-            while threadScan.isAlive() or self.steps > 0:
+            while threadScan.is_alive() or self.steps > 0:
                 if not self.queueNotify.empty():
                     self.__process_event(self.queueNotify)
                 if not self.queueLocation.empty():

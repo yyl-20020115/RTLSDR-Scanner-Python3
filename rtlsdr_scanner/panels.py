@@ -37,10 +37,12 @@ from matplotlib.backends.backend_wxagg import \
 from matplotlib.colorbar import ColorbarBase
 from matplotlib.colors import Normalize
 from matplotlib.dates import num2epoch
+from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.ticker import AutoMinorLocator, ScalarFormatter
 import wx
-import wx.grid as wxGrid
+from wx.grid import Grid, EVT_GRID_CELL_RIGHT_CLICK, EVT_GRID_CELL_LEFT_CLICK, EVT_GRID_CELL_CHANGED, \
+    GridCellBoolEditor, GridCellFloatEditor
 
 from rtlsdr_scanner.constants import Display
 from rtlsdr_scanner.misc import format_precision
@@ -120,12 +122,12 @@ class PanelGraph(wx.Panel):
         self.canvas.mpl_connect('axes_leave_event', self.__on_leave)
         self.canvas.mpl_connect('motion_notify_event', self.__on_motion)
         self.canvas.mpl_connect('draw_event', self.__on_draw)
-        self.Bind (wx.EVT_IDLE, self.__on_idle)
+        self.Bind(wx.EVT_IDLE, self.__on_idle)
         self.Bind(wx.EVT_SIZE, self.__on_size)
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.__on_timer, self.timer)
-  
+
     def __set_fonts(self):
         axes = self.plot.get_axes()
         if axes is not None:
@@ -186,7 +188,8 @@ class PanelGraph(wx.Panel):
             spectrum = None
             coords = axes.format_coord(event.xdata,
                                        event.ydata)
-            match = re.match('x=([-|0-9|\.]+).*y=([0-9|\:]+).*z=([-|0-9|\.]+)',
+            #TODO:
+            match = re.match('x=([-|0-9|.]+).*y=([0-9|:]+).*z=([-|0-9|.]+)',
                              coords)
             if match is not None and match.lastindex == 3:
                 freq = float(match.group(1))
@@ -197,7 +200,7 @@ class PanelGraph(wx.Panel):
             spectrum = None
 
         if spectrum is not None and len(spectrum) > 0:
-            x = min(spectrum.keys(), key=lambda freq: abs(freq - xpos))
+            x = min(spectrum.keys(), key=lambda _freq: abs(_freq - xpos))
             if min(spectrum.keys(), key=float) <= xpos <= max(spectrum.keys(),
                                                               key=float):
                 y = spectrum[x]
@@ -264,7 +267,7 @@ class PanelGraph(wx.Panel):
         try:
             self.isDrawing = True
             self.canvas.draw()
-        except wx.PyDeadObjectError:
+        except RuntimeError:
             pass
 
         self.isDrawing = False
@@ -481,9 +484,9 @@ class PanelGraphCompare(wx.Panel):
         self.axesDiff = self.axesScan.twinx()
         self.axesDiff.yaxis.set_minor_locator(AutoMinorLocator(10))
         self.plotScan1, = self.axesScan.plot([], [], 'b-',
-                                                     linewidth=0.4)
+                                             linewidth=0.4)
         self.plotScan2, = self.axesScan.plot([], [], 'g-',
-                                                     linewidth=0.4)
+                                             linewidth=0.4)
         self.plotDiff, = self.axesDiff.plot([], [], 'r-', linewidth=0.4)
         self.axesScan.set_ylim(auto=True)
         self.axesDiff.set_ylim(auto=True)
@@ -570,9 +573,7 @@ class PanelGraphCompare(wx.Panel):
             intersections = len(freqs)
             self.plotDiff.set_xdata(freqs)
             self.plotDiff.set_ydata([0] * intersections)
-
         self.spectrumDiff = diff
-
         self.textIntersect.SetLabel('Intersections: {}'.format(intersections))
 
     def get_canvas(self):
@@ -625,7 +626,7 @@ class PanelColourBar(wx.Panel):
     def __init__(self, parent, colourMap):
         wx.Panel.__init__(self, parent)
         dpi = wx.ScreenDC().GetPPI()[0]
-        figure = matplotlib.figure.Figure(facecolor='white', dpi=dpi)
+        figure = Figure(facecolor='white', dpi=dpi)
         figure.set_size_inches(200.0 / dpi, 25.0 / dpi)
         self.canvas = FigureCanvas(self, -1, figure)
         axes = figure.add_subplot(111)
@@ -637,7 +638,7 @@ class PanelColourBar(wx.Panel):
 
     def set_map(self, colourMap):
         self.bar.set_cmap(colourMap)
-        self.bar.changed()
+        self.bar.update_ticks()
         self.bar.draw_all()
         self.canvas.draw()
 
@@ -659,7 +660,7 @@ class PanelLine(wx.Panel):
         pen = wx.Pen(self.colour, 2)
         dc.SetPen(pen)
         colourBack = self.GetBackgroundColour()
-        brush = wx.Brush(colourBack, wx.SOLID)
+        brush = wx.Brush(colourBack, wx.BRUSHSTYLE_SOLID)
         dc.SetBackground(brush)
 
         dc.Clear()
@@ -677,18 +678,18 @@ class PanelMeasure(wx.Panel):
 
         self.measure = None
 
-        self.checked = {Measure.MIN: None,
-                        Measure.MAX: None,
-                        Measure.AVG: None,
-                        Measure.GMEAN: None,
-                        Measure.HBW: None,
-                        Measure.OBW: None}
+        self.checked = {Measure.MIN: "",
+                        Measure.MAX: "",
+                        Measure.AVG: "",
+                        Measure.GMEAN: "",
+                        Measure.HBW: "",
+                        Measure.OBW: ""}
 
         self.selected = None
 
         self.SetBackgroundColour('white')
 
-        self.grid = wxGrid.Grid(self)
+        self.grid = Grid(self)
         self.grid.CreateGrid(3, 19)
         self.grid.EnableEditing(True)
         self.grid.EnableDragGridSize(False)
@@ -708,7 +709,7 @@ class PanelMeasure(wx.Panel):
 
         for row in range(self.grid.GetNumberRows()):
             for col in range(self.grid.GetNumberCols()):
-                    self.grid.SetReadOnly(row, col, True)
+                self.grid.SetReadOnly(row, col, True)
 
         self.locsDesc = {'F Start': (0, 0),
                          'F End': (1, 0),
@@ -776,25 +777,21 @@ class PanelMeasure(wx.Panel):
         for _desc, (_row, col) in self.locsCheck.items():
             self.grid.AutoSizeColumn(col)
 
-        toolTips = {}
-        toolTips[self.locsMeasure['start']] = 'Selection start (MHz)'
-        toolTips[self.locsMeasure['end']] = 'Selection end (MHz)'
-        toolTips[self.locsMeasure['deltaF']] = 'Selection bandwidth (MHz)'
-        toolTips[self.locsMeasure['minFP']] = 'Minimum power location (MHz)'
-        toolTips[self.locsMeasure['maxFP']] = 'Maximum power location (MHz)'
-        toolTips[self.locsMeasure['deltaFP']] = 'Power location difference (MHz)'
-        toolTips[self.locsMeasure['minP']] = 'Minimum power (dB)'
-        toolTips[self.locsMeasure['maxP']] = 'Maximum power (dB)'
-        toolTips[self.locsMeasure['deltaP']] = 'Power difference (dB)'
-        toolTips[self.locsMeasure['avg']] = 'Mean power (dB)'
-        toolTips[self.locsMeasure['gmean']] = 'Geometric mean power (dB)'
-        toolTips[self.locsMeasure['flat']] = 'Spectral flatness'
-        toolTips[self.locsMeasure['hbwstart']] = '-3db start location (MHz)'
-        toolTips[self.locsMeasure['hbwend']] = '-3db end location (MHz)'
-        toolTips[self.locsMeasure['hbwdelta']] = '-3db bandwidth (MHz)'
-        toolTips[self.locsMeasure['obwstart']] = '99% start location (MHz)'
-        toolTips[self.locsMeasure['obwend']] = '99% end location (MHz)'
-        toolTips[self.locsMeasure['obwdelta']] = '99% bandwidth (MHz)'
+        toolTips = {self.locsMeasure['start']: 'Selection start (MHz)', self.locsMeasure['end']: 'Selection end (MHz)',
+                    self.locsMeasure['deltaF']: 'Selection bandwidth (MHz)',
+                    self.locsMeasure['minFP']: 'Minimum power location (MHz)',
+                    self.locsMeasure['maxFP']: 'Maximum power location (MHz)',
+                    self.locsMeasure['deltaFP']: 'Power location difference (MHz)',
+                    self.locsMeasure['minP']: 'Minimum power (dB)', self.locsMeasure['maxP']: 'Maximum power (dB)',
+                    self.locsMeasure['deltaP']: 'Power difference (dB)', self.locsMeasure['avg']: 'Mean power (dB)',
+                    self.locsMeasure['gmean']: 'Geometric mean power (dB)',
+                    self.locsMeasure['flat']: 'Spectral flatness',
+                    self.locsMeasure['hbwstart']: '-3db start location (MHz)',
+                    self.locsMeasure['hbwend']: '-3db end location (MHz)',
+                    self.locsMeasure['hbwdelta']: '-3db bandwidth (MHz)',
+                    self.locsMeasure['obwstart']: '99% start location (MHz)',
+                    self.locsMeasure['obwend']: '99% end location (MHz)',
+                    self.locsMeasure['obwdelta']: '99% bandwidth (MHz)'}
 
         self.toolTips = GridToolTips(self.grid, toolTips)
 
@@ -803,10 +800,10 @@ class PanelMeasure(wx.Panel):
                                                    "Copy entry")
         self.Bind(wx.EVT_MENU, self.__on_copy, self.popupMenuCopy)
 
-        self.Bind(wxGrid.EVT_GRID_CELL_RIGHT_CLICK, self.__on_popup_menu)
-        self.Bind(wxGrid.EVT_GRID_CELL_LEFT_CLICK, self.__on_cell_click)
+        self.Bind(EVT_GRID_CELL_RIGHT_CLICK, self.__on_popup_menu)
+        self.Bind(EVT_GRID_CELL_LEFT_CLICK, self.__on_cell_click)
         if wx.VERSION >= (3, 0, 0, 0):
-            self.Bind(wxGrid.EVT_GRID_CELL_CHANGED, self.__on_cell_change)
+            self.Bind(EVT_GRID_CELL_CHANGED, self.__on_cell_change)
 
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(self.grid, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT,
@@ -815,7 +812,7 @@ class PanelMeasure(wx.Panel):
 
     def __set_descs(self):
         font = self.grid.GetCellFont(0, 0)
-        font.SetWeight(wx.BOLD)
+        font.SetWeight(wx.FONTWEIGHT_BOLD)
 
         for desc, (row, col) in self.locsDesc.items():
             self.grid.SetCellValue(row, col, desc)
@@ -823,7 +820,7 @@ class PanelMeasure(wx.Panel):
 
     def __set_check_editor(self):
         for _desc, (row, col) in self.locsCheck.items():
-            self.grid.SetCellEditor(row, col, wxGrid.GridCellBoolEditor())
+            self.grid.SetCellEditor(row, col, GridCellBoolEditor())
             self.grid.SetCellAlignment(row, col, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
             self.grid.SetCellRenderer(row, col, CheckBoxCellRenderer(self))
 
@@ -831,7 +828,7 @@ class PanelMeasure(wx.Panel):
         for (row, col) in self.locsFreq:
             self.grid.SetReadOnly(row, col, False)
             self.grid.SetCellAlignment(row, col, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
-            self.grid.SetCellEditor(row, col, wxGrid.GridCellFloatEditor(precision=4))
+            self.grid.SetCellEditor(row, col, GridCellFloatEditor(precision=4))
 
     def __set_check_value(self, cell, value):
         (row, col) = self.locsCheck[cell]
@@ -882,7 +879,7 @@ class PanelMeasure(wx.Panel):
                     check = '1'
                 self.grid.SetCellValue(row, col, check)
 
-                for control, (r, c) in self.locsCheck.iteritems():
+                for control, (r, c) in self.locsCheck.items():
                     if (r, c) == (row, col):
                         self.checked[control] = check
 
@@ -966,7 +963,7 @@ class PanelMeasure(wx.Panel):
         if not self.measure.is_valid():
             self.clear_measurement()
             return
-
+        text = ""
         minF, maxF = self.measure.get_f()
         minP = self.measure.get_min_p()
         maxP = self.measure.get_max_p()
@@ -1045,13 +1042,13 @@ class PanelMeasure(wx.Panel):
             text = ''
         self.__set_measure_value('obwstart', text)
         if obw[1] is not None:
-            text = text = format_precision(self.settings, obw[1], units=False)
+            text = format_precision(self.settings, obw[1], units=False)
         else:
             text = ''
         self.__set_measure_value('obwend', text)
         if obw[0] is not None and obw[1] is not None:
-            text = text = format_precision(self.settings, obw[1] - obw[0],
-                                           units=False)
+            text = format_precision(self.settings, obw[1] - obw[0],
+                                    units=False)
         else:
             text = ''
         self.__set_measure_value('obwdelta', text)

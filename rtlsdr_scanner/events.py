@@ -87,7 +87,7 @@ class EventTimer(wx.Timer):
 
 
 class Log:
-    MAX_ENTRIES = 50
+    MAX_ENTRIES = 24
 
     INFO, WARN, ERROR = range(3)
     TEXT_LEVEL = ['Info', 'Warn', 'Error']

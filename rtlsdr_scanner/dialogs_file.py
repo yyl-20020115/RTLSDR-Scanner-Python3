@@ -33,8 +33,10 @@ import matplotlib
 import matplotlib.tri
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter
 import numpy
+from matplotlib.tri import CubicTriInterpolator, Triangulation
 from wx import grid
 import wx
 from wx.grid import GridCellDateTimeRenderer
@@ -61,7 +63,7 @@ class DialogProperties(wx.Dialog):
 
         box = wx.BoxSizer(wx.VERTICAL)
 
-        grid = wx.GridBagSizer(0, 0)
+        m_grid = wx.GridBagSizer(0, 0)
 
         boxScan = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, "Scan"),
                                     wx.HORIZONTAL)
@@ -152,7 +154,7 @@ class DialogProperties(wx.Dialog):
 
         boxScan.Add(gridScan, 0, 0, 5)
 
-        grid.Add(boxScan, (0, 0), (1, 1), wx.ALL | wx.EXPAND, 5)
+        m_grid.Add(boxScan, (0, 0), (1, 1), wx.ALL | wx.EXPAND, 5)
 
         boxDevice = wx.StaticBoxSizer(wx.StaticBox(self, label="Device"),
                                       wx.VERTICAL)
@@ -203,9 +205,9 @@ class DialogProperties(wx.Dialog):
 
         boxDevice.Add(gridDevice, 1, wx.EXPAND, 5)
 
-        grid.Add(boxDevice, (1, 0), (1, 1), wx.ALL | wx.EXPAND, 5)
+        m_grid.Add(boxDevice, (1, 0), (1, 1), wx.ALL | wx.EXPAND, 5)
 
-        box.Add(grid, 1, wx.ALL | wx.EXPAND, 5)
+        box.Add(m_grid, 1, wx.ALL | wx.EXPAND, 5)
 
         sizerButtons = wx.StdDialogButtonSizer()
         buttonOk = wx.Button(self, wx.ID_OK)
@@ -314,7 +316,6 @@ class DialogImageSize(wx.Dialog):
         self.settings.exportWidth = self.ctrlWidth.GetValue()
         self.settings.exportHeight = self.ctrlHeight.GetValue()
         self.settings.exportDpi = self.spinDpi.GetValue()
-
         self.EndModal(wx.ID_OK)
 
 
@@ -334,7 +335,7 @@ class DialogExportSeq(wx.Dialog):
         self.Bind(wx.EVT_TIMER, self.__on_timer, self.timer)
         self.timer.Start(self.POLL)
 
-        self.figure = matplotlib.figure.Figure(facecolor='white')
+        self.figure = Figure(facecolor='white')
         self.canvas = FigureCanvas(self, -1, self.figure)
         self.plot = Plotter(self.queue, self.figure, settings)
 
@@ -493,16 +494,14 @@ class DialogExportSeq(wx.Dialog):
         self.isExporting = True
         extent = Extent(self.spectrum)
         dlgProgress = wx.ProgressDialog('Exporting', '', len(self.sweeps),
-                                        style=wx.PD_AUTO_HIDE | 
-                                        wx.PD_CAN_ABORT | 
-                                        wx.PD_REMAINING_TIME)
+                                        style=wx.PD_AUTO_HIDE | wx.PD_CAN_ABORT | wx.PD_REMAINING_TIME)
 
         try:
             count = 1
             for timeStamp, sweep in self.sweeps.items():
                 name = '{0:.0f}.png'.format(timeStamp)
                 directory = self.editDir.GetValue()
-                filename = os.path.join(directory, name)
+                # filename = os.path.join(directory, name)
 
                 thread = self.plot.set_plot({timeStamp: sweep}, extent, False)
                 thread.join()
@@ -559,6 +558,7 @@ class DialogExportGeo(wx.Dialog):
     IMAGE_SIZE = 500
 
     def __init__(self, parent, spectrum, location, settings):
+        self.filename = ""
         self.spectrum = spectrum
         self.location = location
         self.settings = settings
@@ -727,8 +727,8 @@ class DialogExportGeo(wx.Dialog):
         self.choiceMapMesh.Enable(self.plotMesh)
         self.choiceMapHeat.Enable(self.plotHeat)
 
-        self.axes.set_xlabel('Longitude ($^\circ$)')
-        self.axes.set_ylabel('Latitude ($^\circ$)')
+        self.axes.set_xlabel('Longitude ($^\\circ$)')
+        self.axes.set_ylabel('Latitude ($^\\circ$)')
         self.axes.set_xlim(auto=True)
         self.axes.set_ylim(auto=True)
         formatter = ScalarFormatter(useOffset=False)
@@ -762,7 +762,7 @@ class DialogExportGeo(wx.Dialog):
         y = []
         z = []
 
-        for coord, peak in coords.iteritems():
+        for coord, peak in coords.items():
             x.append(coord[1])
             y.append(coord[0])
             z.append(peak)
@@ -774,19 +774,19 @@ class DialogExportGeo(wx.Dialog):
                                 numpy.linspace(min(y), max(y), self.IMAGE_SIZE))
 
         if self.plotMesh or self.plotCont:
-            triangle = matplotlib.tri.Triangulation(x, y)
-            interp = matplotlib.tri.CubicTriInterpolator(triangle, z, kind='geom')
+            triangle = Triangulation(x, y)
+            interp = CubicTriInterpolator(triangle, z, kind='geom')
             zi = interp(xi, yi)
-            
-        if self.plotMesh:
-            self.plot = self.axes.pcolormesh(xi, yi, zi, cmap=self.colourMap)
-            self.plot.set_zorder(1)
- 
-        if self.plotCont:
-            contours = self.axes.contour(xi, yi, zi, linewidths=0.5,
-                                         colors='k')
-            self.axes.clabel(contours, inline=1, fontsize='x-small',
-                            gid='clabel', zorder=3)
+
+            if self.plotMesh:
+                self.plot = self.axes.pcolormesh(xi, yi, zi, cmap=self.colourMap)
+                self.plot.set_zorder(1)
+
+            if self.plotCont:
+                contours = self.axes.contour(xi, yi, zi, linewidths=0.5,
+                                             colors='k')
+                self.axes.clabel(contours, inline=1, fontsize='x-small',
+                                 gid='clabel', zorder=3)
 
         if self.plotHeat:
             image = create_heatmap(x, y,

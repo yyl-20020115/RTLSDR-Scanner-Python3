@@ -38,6 +38,9 @@ if not hasattr(sys, 'frozen'):
         app = vv.use('wx')
         vvPresent = True
     except ImportError:
+        import visvis as vv
+        from visvis.core.line import Line
+
         pass
 
 
@@ -52,7 +55,7 @@ class PlotterPreview:
 
         self.__setup_plot()
         self.__setup_window()
-        self.set_plot(None, None, None)
+        self.set_plot(None, None, False)
 
     def __setup_plot(self):
         self.axes = self.figure.add_subplot(111)
@@ -136,7 +139,7 @@ class DialogPreview(wx.Dialog):
         fig.bgcolor = (1, 1, 1)
 
         sizer = wx.BoxSizer()
-        sizer.Add(fig._widget, 1, wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(fig, 1, wx.EXPAND | wx.ALL, border=5)
 
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
@@ -177,7 +180,7 @@ class DialogPreview(wx.Dialog):
 
     def set_title(self, title):
         vv.title(title.replace('\n', ' '))
-
+        
     def to_front(self):
         style = self.GetWindowStyle()
         self.SetWindowStyle(style | wx.STAY_ON_TOP)

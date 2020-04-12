@@ -32,7 +32,7 @@ from rtlsdr_scanner.plot_status import PlotterStatus
 from rtlsdr_scanner.plot_time import PlotterTime
 
 
-class MouseZoom():
+class MouseZoom:
     SCALE_STEP = 1.3
 
     def __init__(self, toolbar, figure=None, plot=None, callbackHide=None):
@@ -62,8 +62,8 @@ class MouseZoom():
             self.callbackHide()
         self.toolbar.clear_auto()
 
-        if self.toolbar._views.empty():
-            self.toolbar.push_current()
+        # if self.toolbar.views.empty():
+        #    self.toolbar.push_current()
 
         xLim = self.axes.get_xlim()
         yLim = self.axes.get_ylim()
@@ -89,7 +89,7 @@ class MouseZoom():
         self.figure.canvas.draw()
 
 
-class MouseSelect():
+class MouseSelect:
     def __init__(self, plot, callbackPre, callbackPost):
         self.selector = None
         if isinstance(plot, (Plotter3d, PlotterStatus,
@@ -113,7 +113,7 @@ class MouseSelect():
 
 
 # Based on http://matplotlib.org/1.3.1/users/event_handling.html
-class RangeSelector():
+class RangeSelector:
     def __init__(self, axes, callbackPre, callbackPost):
         self.axes = axes
         self.callbackPre = callbackPre
@@ -198,8 +198,6 @@ class RangeSelector():
         self.rect.set_y(yMin)
         self.rect.set_width(xMax - xMin)
         self.rect.set_height(yMax - yMin)
-
-        #if self.axes.cachedRenderer is not None:
         self.axes.draw_artist(self.rect)
 
     def hide(self):

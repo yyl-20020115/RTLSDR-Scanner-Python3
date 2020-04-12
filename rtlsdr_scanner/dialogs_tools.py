@@ -27,8 +27,8 @@ import copy
 import textwrap
 from queue import Queue
 
-import matplotlib
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.figure import Figure
 from wx import grid
 import wx
 from wx.lib import masked
@@ -107,32 +107,32 @@ class DialogCompare(wx.Dialog):
         self.Bind(wx.EVT_CHECKBOX, self.__on_check_diff, self.checkDiff)
         self.Bind(wx.EVT_BUTTON, self.__on_close, buttonClose)
 
-        grid = wx.GridBagSizer(5, 5)
+        m_grid = wx.GridBagSizer(5, 5)
 
-        grid.Add(textPlot1, pos=(0, 0))
-        grid.Add(linePlot1, pos=(0, 1), flag=wx.EXPAND)
-        grid.Add(self.checkOne, pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        grid.Add(self.buttonPlot1, pos=(1, 0))
-        grid.Add(self.textPlot1, pos=(2, 0))
-        grid.Add(self.textLoc1, pos=(3, 0))
+        m_grid.Add(textPlot1, pos=(0, 0))
+        m_grid.Add(linePlot1, pos=(0, 1), flag=wx.EXPAND)
+        m_grid.Add(self.checkOne, pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        m_grid.Add(self.buttonPlot1, pos=(1, 0))
+        m_grid.Add(self.textPlot1, pos=(2, 0))
+        m_grid.Add(self.textLoc1, pos=(3, 0))
 
-        grid.Add(wx.StaticLine(self), pos=(5, 0), span=(1, 3), flag=wx.EXPAND)
-        grid.Add(textPlot2, pos=(6, 0))
-        grid.Add(linePlot2, pos=(6, 1), flag=wx.EXPAND)
-        grid.Add(self.checkTwo, pos=(6, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        grid.Add(self.buttonPlot2, pos=(7, 0))
-        grid.Add(self.textPlot2, pos=(8, 0))
-        grid.Add(self.textLoc2, pos=(9, 0))
+        m_grid.Add(wx.StaticLine(self), pos=(5, 0), span=(1, 3), flag=wx.EXPAND)
+        m_grid.Add(textPlot2, pos=(6, 0))
+        m_grid.Add(linePlot2, pos=(6, 1), flag=wx.EXPAND)
+        m_grid.Add(self.checkTwo, pos=(6, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        m_grid.Add(self.buttonPlot2, pos=(7, 0))
+        m_grid.Add(self.textPlot2, pos=(8, 0))
+        m_grid.Add(self.textLoc2, pos=(9, 0))
 
-        grid.Add(wx.StaticLine(self), pos=(11, 0), span=(1, 3), flag=wx.EXPAND)
-        grid.Add(textPlotDiff, pos=(12, 0))
-        grid.Add(linePlotDiff, pos=(12, 1), flag=wx.EXPAND)
-        grid.Add(self.checkDiff, pos=(12, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        grid.Add(self.textLocDiff, pos=(13, 0))
+        m_grid.Add(wx.StaticLine(self), pos=(11, 0), span=(1, 3), flag=wx.EXPAND)
+        m_grid.Add(textPlotDiff, pos=(12, 0))
+        m_grid.Add(linePlotDiff, pos=(12, 1), flag=wx.EXPAND)
+        m_grid.Add(self.checkDiff, pos=(12, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        m_grid.Add(self.textLocDiff, pos=(13, 0))
 
         sizerV = wx.BoxSizer(wx.HORIZONTAL)
         sizerV.Add(self.graph, 1, wx.EXPAND)
-        sizerV.Add(grid, 0, wx.ALL, border=5)
+        sizerV.Add(m_grid, 0, wx.ALL, border=5)
 
         sizerH = wx.BoxSizer(wx.VERTICAL)
         sizerH.Add(sizerV, 1, wx.EXPAND, border=5)
@@ -155,7 +155,7 @@ class DialogCompare(wx.Dialog):
     def __on_load_plot(self, event):
         dlg = wx.FileDialog(self, "Open a scan", self.dirname, self.filename,
                             File.get_type_filters(File.Types.SAVE),
-                            wx.OPEN)
+                            wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             self.dirname = dlg.GetDirectory()
             self.filename = dlg.GetFilename()
@@ -215,7 +215,7 @@ class DialogSmooth(wx.Dialog):
         self.Bind(wx.EVT_TIMER, self.__on_timer, self.timer)
         self.timer.Start(self.POLL)
 
-        self.figure = matplotlib.figure.Figure(facecolor='white')
+        self.figure = Figure(facecolor='white')
         self.canvas = FigureCanvas(self, -1, self.figure)
         settings = copy.copy(settings)
         settings.plotFunc = PlotFunc.NONE
@@ -281,7 +281,7 @@ class DialogSmooth(wx.Dialog):
         self.smoothed = smooth_spectrum(self.spectrum, func, ratio)
         self.__draw_plot(self.smoothed)
         self.buttonOk.Enable()
-        dlg.Destroy()
+        # dlg.Destroy()
 
     def __on_ok(self, _event):
         self.EndModal(wx.ID_OK)
@@ -414,7 +414,7 @@ class DialogSats(wx.Dialog):
 
 class DialogLog(wx.Dialog):
     def __init__(self, parent, log):
-        wx.Dialog.__init__(self, parent=parent, title="Log")
+        wx.Dialog.__init__(self, parent=parent, title="Log", size=(800, 600))
 
         self.parent = parent
         self.log = log
@@ -428,14 +428,13 @@ class DialogLog(wx.Dialog):
         self.gridLog.EnableEditing(False)
 
         textFilter = wx.StaticText(self, label='Level')
-        self.choiceFilter = wx.Choice(self,
-                                      choices=['All'] + self.log.TEXT_LEVEL)
+        self.choiceFilter = wx.Choice(self, choices=['All'] + self.log.TEXT_LEVEL)
         self.choiceFilter.SetSelection(0)
         self.choiceFilter.SetToolTip('Filter log level')
         self.Bind(wx.EVT_CHOICE, self.__on_filter, self.choiceFilter)
         sizerFilter = wx.BoxSizer()
-        sizerFilter.Add(textFilter, flag=wx.ALL, border=5)
-        sizerFilter.Add(self.choiceFilter, flag=wx.ALL, border=5)
+        sizerFilter.Add(textFilter, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=2)
+        sizerFilter.Add(self.choiceFilter, flag=wx.ALL, border=2)
 
         buttonRefresh = wx.Button(self, wx.ID_ANY, label='Refresh')
         buttonRefresh.SetToolTip('Refresh the log')
@@ -444,14 +443,14 @@ class DialogLog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.__on_close, buttonClose)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.gridLog, 1, flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(sizerFilter, 0, flag=wx.ALL, border=5)
-        sizer.Add(buttonRefresh, 0, flag=wx.ALL, border=5)
-        sizer.Add(buttonClose, 0, flag=wx.ALL | wx.ALIGN_RIGHT, border=5)
+        sizer.Add(self.gridLog, 1, flag=wx.ALL, border=2)
+        sizer.Add(sizerFilter, 0, flag=wx.ALL, border=2)
+        sizer.Add(buttonRefresh, 0, flag=wx.ALL | wx.ALIGN_RIGHT, border=2)
+        sizer.Add(buttonClose, 0, flag=wx.ALL | wx.ALIGN_RIGHT, border=2)
 
         self.sizer = sizer
-        self.__update_grid()
         self.SetSizer(sizer)
+        self.__update_grid()
 
         self.Bind(wx.EVT_CLOSE, self.__on_close)
 
@@ -504,8 +503,8 @@ class DialogLog(wx.Dialog):
         size = self.gridLog.GetBestSize()
         size.width += wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X) + 10
         size.height = 400
-        self.SetClientSize(size)
         self.sizer.Layout()
+        self.SetClientSize(size)
 
 
 if __name__ == '__main__':

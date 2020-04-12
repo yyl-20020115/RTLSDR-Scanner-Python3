@@ -119,10 +119,10 @@ def get_devices_rtl(currentDevices=None, statusBar=None):
         device.name = format_device_rtl_name(rtlsdr.librtlsdr.rtlsdr_get_device_name(dev))
         buffer1 = (c_ubyte * 256)()
         buffer2 = (c_ubyte * 256)()
-        serial = (c_ubyte * 256)()
+        _serial = (c_ubyte * 256)()
         rtlsdr.librtlsdr.rtlsdr_get_device_usb_strings(dev, buffer1, buffer2,
-                                                       serial)
-        device.serial = string_at(serial)
+                                                       _serial)
+        device.serial = string_at(_serial)
         try:
             sdr = rtlsdr.RtlSdr(dev)
         except IOError:
@@ -147,6 +147,9 @@ def get_devices_rtl(currentDevices=None, statusBar=None):
 
 
 def format_device_rtl_name(name):
+    if type(name) is not str:
+        name = str(name, encoding="utf-8")
+
     remove = ["/", "\\"]
     for char in remove:
         name = name.replace(char, " ")

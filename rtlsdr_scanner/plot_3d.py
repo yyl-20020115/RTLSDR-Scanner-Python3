@@ -33,7 +33,6 @@ from matplotlib.colors import Normalize, hex2color
 from matplotlib.dates import DateFormatter
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import ScalarFormatter, AutoMinorLocator
-from mpl_toolkits.mplot3d import Axes3D  # @UnresolvedImport @UnusedImport
 
 from rtlsdr_scanner.constants import PlotFunc
 from rtlsdr_scanner.events import post_event, EventThread, Event
@@ -98,7 +97,7 @@ class Plotter3d:
                 self.barBase.set_clim(self.extent.get_l())
                 try:
                     self.barBase.draw_all()
-                except:
+                except RuntimeError:
                     pass
             if self.settings.autoT or force:
                 self.axes.set_ylim(self.extent.get_t())
@@ -155,7 +154,7 @@ class Plotter3d:
         self.barBase.set_cmap(colourMap)
         try:
             self.barBase.draw_all()
-        except:
+        except RuntimeError:
             pass
 
     def close(self):
@@ -180,7 +179,7 @@ class ThreadPlot(threading.Thread):
         if self.data is None:
             self.parent.threadPlot = None
             return
-
+        peakF, peakL, peakT = 0, 0, 0
         total = len(self.data)
         if total > 0:
             if self.settings.plotFunc == PlotFunc.NONE:

@@ -23,7 +23,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import array
 import socket
 import struct
 import threading
@@ -65,18 +64,20 @@ class RtlTcp:
                               ord(header[7]))
 
     def __send_command(self, command, data):
-        send = array.array('c', '\0' * 5)
+        # send = array.array('c', '\0' * 5)
+        send = bytearray(5)
 
         struct.pack_into('>l', send, 1, data)
-        send[0] = struct.pack('<b', command)
+        send += struct.pack('<b', command)
 
         self.threadBuffer.sendall(send)
 
     def __read_raw(self, samples):
         return self.threadBuffer.recv(samples * 2)
 
-    def __raw_to_iq(self, raw):
-        iq = numpy.empty(len(raw) / 2, 'complex')
+    @staticmethod
+    def __raw_to_iq(raw):
+        iq = numpy.empty(int(len(raw) / 2), 'complex')
         iq.real, iq.imag = raw[::2], raw[1::2]
         iq /= (255 / 2)
         iq -= 1
@@ -159,8 +160,6 @@ class ThreadBuffer(threading.Thread):
 
     def __read_stream(self):
         data = []
-        recv = ""
-
         self.buffer = ""
         while self.readLen > 0:
             recv = self.socket.recv(self.readLen)
@@ -169,7 +168,7 @@ class ThreadBuffer(threading.Thread):
             data.append(recv)
             self.readLen -= len(recv)
 
-        self.buffer = bytearray(''.join(data))
+        self.buffer += data
         self.__do_notify()
 
     def __skip_stream(self):

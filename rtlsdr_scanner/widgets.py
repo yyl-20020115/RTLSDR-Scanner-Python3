@@ -26,7 +26,7 @@
 from collections import OrderedDict
 
 import wx
-from wx.grid import PyGridCellRenderer, GridCellRenderer
+from wx.grid import GridCellRenderer
 
 
 class MultiButton(wx.Control):
@@ -35,7 +35,7 @@ class MultiButton(wx.Control):
 
     def __init__(self, parent, options, tips=None, selected=0):
         wx.Control.__init__(self, parent=parent, size=wx.DefaultSize,
-                              style=wx.NO_BORDER)
+                            style=wx.NO_BORDER)
         self.options = options
         self.tips = tips
         self.pressed = False
@@ -140,7 +140,7 @@ class MultiButton(wx.Control):
         else:
             colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
         if not self.isOverArrow:
-            brush = wx.Brush(colour, wx.SOLID)
+            brush = wx.Brush(colour, wx.BRUSHSTYLE_SOLID)
             dc.SetBrush(brush)
         pen = wx.Pen(colour)
         dc.SetPen(pen)
@@ -191,12 +191,12 @@ class MultiButton(wx.Control):
 class Led(wx.Control):
     PULSE_TIME = 250
 
-    def __init__(self, parent, id=wx.ID_ANY, label=''):
+    def __init__(self, parent, mid=wx.ID_ANY, label=''):
         self.lit = False
         self.colour = wx.GREEN
 
-        wx.Control.__init__(self, parent=parent, id=id, size=wx.DefaultSize,
-                              style=wx.NO_BORDER)
+        wx.Control.__init__(self, parent=parent, id=mid, size=wx.DefaultSize,
+                            style=wx.NO_BORDER)
 
         self.SetLabel(label)
 
@@ -220,7 +220,7 @@ class Led(wx.Control):
 
     def __draw(self, dc):
         colour = self.GetBackgroundColour()
-        brush = wx.Brush(colour, wx.SOLID)
+        brush = wx.Brush(colour, wx.BRUSHSTYLE_SOLID)
         dc.SetBackground(brush)
         dc.SetFont(self.GetFont())
         attr = self.GetClassDefaultAttributes()
@@ -236,7 +236,7 @@ class Led(wx.Control):
         gc.SetPen(wx.Pen(attr.colFg))
 
         if self.lit:
-            brush = wx.Brush(self.colour, wx.SOLID)
+            brush = wx.Brush(self.colour, wx.BRUSHSTYLE_SOLID)
             gc.SetBrush(brush)
 
         path = gc.CreatePath()
@@ -266,9 +266,9 @@ class SatLevel(wx.Control):
     BAR_HEIGHT = 75
     PADDING = 5
 
-    def __init__(self, parent, id=wx.ID_ANY, barCount=16):
-        wx.Control.__init__(self, parent=parent, id=id, size=wx.DefaultSize,
-                              style=wx.NO_BORDER)
+    def __init__(self, parent, mid=wx.ID_ANY, barCount=16):
+        wx.Control.__init__(self, parent=parent, id=mid, size=wx.DefaultSize,
+                            style=wx.NO_BORDER)
 
         self.barCount = barCount
         self.sats = None
@@ -285,7 +285,7 @@ class SatLevel(wx.Control):
 
     def __draw(self, dc):
         colour = self.GetBackgroundColour()
-        brush = wx.Brush(colour, wx.SOLID)
+        brush = wx.Brush(colour, wx.BRUSHSTYLE_SOLID)
         dc.SetBackground(brush)
         dc.SetFont(self.GetFont())
         attr = self.GetClassDefaultAttributes()
@@ -319,7 +319,7 @@ class SatLevel(wx.Control):
                         gc.SetBrush(wx.GREEN_BRUSH)
                     heightLevel = (level / 99.0) * heightBar
                 else:
-                    gc.SetBrush(wx.Brush(wx.BLUE, wx.CROSSDIAG_HATCH))
+                    gc.SetBrush(wx.Brush(wx.BLUE, wx.BRUSHSTYLE_CROSSDIAG_HATCH))
                     heightLevel = heightBar
 
                 path = gc.CreatePath()
@@ -379,7 +379,7 @@ class TickCellRenderer(GridCellRenderer):
 
     def Draw(self, grid, attr, dc, rect, row, col, _isSelected):
         dc.SetBrush(wx.Brush(attr.GetBackgroundColour()))
-        dc.DrawRectangleRect(rect)
+        dc.DrawRectangle(rect)
 
         gc = wx.GraphicsContext.Create(dc)
         gc.SetPen(wx.Pen(attr.GetTextColour()))
