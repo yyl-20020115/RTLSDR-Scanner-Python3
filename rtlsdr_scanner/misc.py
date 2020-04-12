@@ -81,8 +81,8 @@ def get_resource(resource):
     if not hasattr(sys, 'frozen'):
         return pkg_resources.resource_filename('rtlsdr_scanner.res',
                                                resource)
-    else:  # sys._MEIPASS is for python2
-        return os.path.join(sys._MEIPASS, 'res', resource)
+    # else:  # sys._MEIPASS is for python2
+    #    return os.path.join(sys._MEIPASS, 'res', resource)
 
 
 def limit(value, minimum, maximum):

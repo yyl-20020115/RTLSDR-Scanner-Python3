@@ -64,8 +64,9 @@ class ColorBarPlus(ScalarMappable,ColorbarBase):
                  extendrect=False,
                  label='',
                  ):
-        ColorbarBase.__init__(self, ax, cmap, norm, alpha, values, boundaries, orientation, ticklocation, extend, spacing, ticks, _format, drawedges, filled, extendfrac, extendrect, label)
-        ScalarMappable.__init__(self,norm,cmap)
+        ColorbarBase.__init__(self, ax, cmap, norm, alpha, values, boundaries, orientation, ticklocation, extend,
+                              spacing, ticks, _format, drawedges, filled, extendfrac, extendrect, label)
+        ScalarMappable.__init__(self, norm, cmap)
 
 
 class Plotter:
@@ -435,8 +436,9 @@ class Plotter:
             pass
 
     def close(self):
-        self.figure.clear()
-        self.figure = None
+        if self.figure is not None:
+            self.figure.clear()
+            self.figure = None
 
 
 class ThreadPlot(threading.Thread):

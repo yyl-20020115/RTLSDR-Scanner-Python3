@@ -178,11 +178,11 @@ class NavigationToolbar(NavigationToolbar2WxAgg):
         NavigationToolbar2WxAgg.__init__(self, canvas)
         if matplotlib.__version__ >= '1.2':
             panId = self.wx_ids['Pan']
-        else:
-            panId = self.FindById(self._NTB2_PAN).GetId()
+            self.ToggleTool(panId, True)
+            self.pan()
 
-        self.ToggleTool(panId, True)
-        self.pan()
+        # else:
+        #    panId = self.FindById(self._NTB2_PAN).GetId()
 
         self.__add_spacer(False)
 

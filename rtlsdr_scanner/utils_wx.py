@@ -82,7 +82,8 @@ def load_icon(name):
 
 
 def close_modeless():
-    for child in GetTopLevelWindows():
+    children = GetTopLevelWindows()
+    for child in children:
         if child.Title == 'Configure subplots':
             child.Close()
 

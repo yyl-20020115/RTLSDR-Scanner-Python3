@@ -26,20 +26,12 @@
 import matplotlib
 from matplotlib.patches import Rectangle
 
-from rtlsdr_scanner.plot_3d import Plotter3d
-from rtlsdr_scanner.plot_preview import PlotterPreview
-from rtlsdr_scanner.plot_status import PlotterStatus
-from rtlsdr_scanner.plot_time import PlotterTime
-
 
 class MouseZoom:
     SCALE_STEP = 1.3
 
     def __init__(self, toolbar, figure=None, plot=None, callbackHide=None):
         if figure is None:
-            if isinstance(plot, (Plotter3d, PlotterStatus, PlotterPreview)):
-                return
-
             self.axes = plot.get_axes()
             self.figure = self.axes.get_figure()
         else:
@@ -92,10 +84,6 @@ class MouseZoom:
 class MouseSelect:
     def __init__(self, plot, callbackPre, callbackPost):
         self.selector = None
-        if isinstance(plot, (Plotter3d, PlotterStatus,
-                             PlotterTime, PlotterPreview)):
-            return
-
         axes = plot.get_axes()
         self.selector = RangeSelector(axes, callbackPre, callbackPost)
 

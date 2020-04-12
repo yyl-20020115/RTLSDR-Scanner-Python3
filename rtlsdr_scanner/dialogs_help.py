@@ -32,6 +32,7 @@ import matplotlib
 import numpy
 import serial
 import wx
+from wx.adv import HyperlinkCtrl
 
 from rtlsdr_scanner.utils_wx import load_bitmap
 from rtlsdr_scanner.version import VERSION
@@ -112,9 +113,9 @@ class DialogAbout(wx.Dialog):
                                               "scanning\n with a RTL-SDR compatible USB "
                                               "device", style=wx.ALIGN_CENTRE)
 
-        textLink = wx.adv.HyperlinkCtrl(self, wx.ID_ANY,
-                                        label="http://eartoearoak.com/software/rtlsdr-scanner",
-                                        url="http://eartoearoak.com/software/rtlsdr-scanner")
+        textLink = HyperlinkCtrl(self, wx.ID_ANY,
+                                 label="http://eartoearoak.com/software/rtlsdr-scanner",
+                                 url="http://eartoearoak.com/software/rtlsdr-scanner")
         textVersion = wx.StaticText(self,
                                     label='v' + '.'.join([str(x) for x in VERSION]))
         buttonOk = wx.Button(self, wx.ID_OK)

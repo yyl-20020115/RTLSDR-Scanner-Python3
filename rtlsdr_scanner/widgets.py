@@ -176,7 +176,7 @@ class MultiButton(wx.Control):
 
         return wx.Size(width, height)
 
-    def Enable(self, enabled):
+    def Enable(self, enabled=True):
         self.Enabled = enabled
         self.Refresh()
 

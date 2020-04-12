@@ -49,7 +49,6 @@ from rtlsdr_scanner.misc import format_precision
 from rtlsdr_scanner.plot_3d import Plotter3d
 from rtlsdr_scanner.plot_controls import MouseZoom, MouseSelect
 from rtlsdr_scanner.plot_line import Plotter
-from rtlsdr_scanner.plot_preview import PlotterPreview
 from rtlsdr_scanner.plot_spect import Spectrogram
 from rtlsdr_scanner.plot_status import PlotterStatus
 from rtlsdr_scanner.plot_time import PlotterTime
@@ -148,8 +147,6 @@ class PanelGraph(wx.Panel):
         if self.settings.clickTune and matplotlib.__version__ >= '1.2' and event.dblclick:
             frequency = int(event.xdata * 1e6)
             self.remoteControl.tune(frequency)
-        elif isinstance(self.plot, PlotterPreview):
-            self.plot.to_front()
 
     def __on_enter(self, _event):
         self.toolTip.Enable(False)
@@ -188,7 +185,6 @@ class PanelGraph(wx.Panel):
             spectrum = None
             coords = axes.format_coord(event.xdata,
                                        event.ydata)
-            #TODO:
             match = re.match('x=([-|0-9|.]+).*y=([0-9|:]+).*z=([-|0-9|.]+)',
                              coords)
             if match is not None and match.lastindex == 3:
@@ -311,9 +307,6 @@ class PanelGraph(wx.Panel):
             self.plot = PlotterStatus(self.notify, self.figure, self.settings)
         elif self.settings.display == Display.TIMELINE:
             self.plot = PlotterTime(self.notify, self.figure, self.settings)
-        elif self.settings.display == Display.PREVIEW:
-            self.plot = PlotterPreview(self.notify, self.figure, self.settings)
-            self.plot.set_window(self)
 
         self.__set_fonts()
 
@@ -550,7 +543,7 @@ class PanelGraphCompare(wx.Panel):
         self.axesDiff.relim()
 
     def __plot_diff(self):
-        diff = {}
+        diff = set()
         intersections = 0
 
         if self.spectrum1 is not None and self.spectrum2 is not None:
@@ -573,8 +566,9 @@ class PanelGraphCompare(wx.Panel):
             intersections = len(freqs)
             self.plotDiff.set_xdata(freqs)
             self.plotDiff.set_ydata([0] * intersections)
+
         self.spectrumDiff = diff
-        self.textIntersect.SetLabel('Intersections: {}'.format(intersections))
+        self.textIntersect.SetLabel("Intersections: {}".format(intersections))
 
     def get_canvas(self):
         return self.canvas
@@ -963,7 +957,7 @@ class PanelMeasure(wx.Panel):
         if not self.measure.is_valid():
             self.clear_measurement()
             return
-        text = ""
+
         minF, maxF = self.measure.get_f()
         minP = self.measure.get_min_p()
         maxP = self.measure.get_max_p()
@@ -1019,7 +1013,7 @@ class PanelMeasure(wx.Panel):
                                                   units=False))
         self.__set_measure_value('flat',
                                  "{0:.4f}".format(flatness))
-
+        text = ""
         if hbw[0] is not None:
             text = format_precision(self.settings, hbw[0], units=False)
         else:

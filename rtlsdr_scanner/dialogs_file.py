@@ -27,18 +27,18 @@ import os
 from pickle import UnpicklingError
 from queue import Queue
 
-from PIL import Image
-from matplotlib import mlab, patheffects
 import matplotlib
 import matplotlib.tri
+import numpy
+import wx
+from PIL import Image
+from matplotlib import patheffects
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter
-import numpy
 from matplotlib.tri import CubicTriInterpolator, Triangulation
 from wx import grid
-import wx
 from wx.grid import GridCellDateTimeRenderer
 from wx.lib.masked.numctrl import NumCtrl, EVT_NUM
 

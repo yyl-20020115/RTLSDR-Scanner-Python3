@@ -275,13 +275,13 @@ class DialogSmooth(wx.Dialog):
         self.timer.Start(self.POLL)
 
     def __on_smooth(self, _event):
-        dlg = wx.BusyInfo('Please wait...')
-        func = self.choiceFunc.GetStringSelection()
-        ratio = self.slideRatio.GetValue()
-        self.smoothed = smooth_spectrum(self.spectrum, func, ratio)
-        self.__draw_plot(self.smoothed)
-        self.buttonOk.Enable()
-        # dlg.Destroy()
+        with wx.BusyInfo('Please wait...'):
+            func = self.choiceFunc.GetStringSelection()
+            ratio = self.slideRatio.GetValue()
+            self.smoothed = smooth_spectrum(self.spectrum, func, ratio)
+            self.__draw_plot(self.smoothed)
+            self.buttonOk.Enable()
+            # dlg.Destroy()
 
     def __on_ok(self, _event):
         self.EndModal(wx.ID_OK)

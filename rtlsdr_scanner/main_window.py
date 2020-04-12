@@ -191,7 +191,7 @@ class FrameMain(wx.Frame):
         self.stepsTotal = 0
 
         self.__start_gps()
-        self.__start_location_server()
+        # self.__start_location_server()
 
     def __create_toolbars(self):
         self.remoteControl = RemoteControl()
@@ -646,7 +646,7 @@ class FrameMain(wx.Frame):
             return
         self.__scan_stop(False)
         self.__stop_gps(False)
-        self.__stop_location_server()
+        # self.__stop_location_server()
         self.__get_controls()
         self.settings.devicesRtl = self.devicesRtl
         self.settings.save()
@@ -1170,41 +1170,41 @@ class FrameMain(wx.Frame):
             if join:
                 self.threadLocation.join()
         self.threadLocation = None
-
-    def __start_location_server(self):
-        self.serverLocation = LocationServer(self.locations, self.lastLocation,
-                                             self.lock, self.log)
-
-    def __stop_location_server(self):
-        if self.serverLocation:
-            self.serverLocation.close()
-
-    def __update_location(self, data):
-        i = 0
-        for loc in data:
-            self.lastLocation[i] = loc
-            i += 1
-        self.status.pulse_gps()
-        if data[2] is None:
-            gpsStatus = '{:.5f}, {:.5f}'.format(data[0], data[1])
-        else:
-            gpsStatus = '{:.5f}, {:.5f}, {:.1f}m'.format(data[0], data[1], data[2])
-
-        self.status.set_gps(gpsStatus, level=None)
-
-        if not self.isScanning:
-            return
-
-        if self.scanInfo is not None:
-            if data[0] and data[1]:
-                self.scanInfo.lat = str(data[0])
-                self.scanInfo.lon = str(data[1])
-
-        with self.lock:
-            if len(self.spectrum) > 0:
-                self.locations[max(self.spectrum)] = (data[0],
-                                                      data[1],
-                                                      data[2])
+    #
+    # def __start_location_server(self):
+    #     self.serverLocation = LocationServer(self.locations, self.lastLocation,
+    #                                          self.lock, self.log)
+    #
+    # def __stop_location_server(self):
+    #     if self.serverLocation:
+    #         self.serverLocation.close()
+    #
+    # def __update_location(self, data):
+    #     i = 0
+    #     for loc in data:
+    #         self.lastLocation[i] = loc
+    #         i += 1
+    #     self.status.pulse_gps()
+    #     if data[2] is None:
+    #         gpsStatus = '{:.5f}, {:.5f}'.format(data[0], data[1])
+    #     else:
+    #         gpsStatus = '{:.5f}, {:.5f}, {:.1f}m'.format(data[0], data[1], data[2])
+    #
+    #     self.status.set_gps(gpsStatus, level=None)
+    #
+    #     if not self.isScanning:
+    #         return
+    #
+    #     if self.scanInfo is not None:
+    #         if data[0] and data[1]:
+    #             self.scanInfo.lat = str(data[0])
+    #             self.scanInfo.lon = str(data[1])
+    #
+    #     with self.lock:
+    #         if len(self.spectrum) > 0:
+    #             self.locations[max(self.spectrum)] = (data[0],
+    #                                                   data[1],
+    #                                                   data[2])
 
     def __saved(self, isSaved):
         self.isSaved = isSaved

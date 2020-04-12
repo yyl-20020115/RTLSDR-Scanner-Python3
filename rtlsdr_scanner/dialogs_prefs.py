@@ -149,17 +149,16 @@ class DialogOffset(wx.Dialog):
 
     def __on_refresh(self, _event):
         try:
-            dlg = wx.BusyInfo('Please wait...')
-
-            if self.device.isDevice:
-                sdr = rtlsdr.RtlSdr(self.device.indexRtl)
-            else:
-                sdr = RtlTcp(self.device.server, self.device.port, None)
-            sdr.set_sample_rate(SAMPLE_RATE)
-            sdr.set_center_freq(self.spinFreq.GetValue() * 1e6)
-            sdr.set_gain(self.spinGain.GetValue())
-            capture = sdr.read_samples(2 ** 21)
-            sdr.close()
+            with wx.BusyInfo('Please wait...'):
+                if self.device.isDevice:
+                    sdr = rtlsdr.RtlSdr(self.device.indexRtl)
+                else:
+                    sdr = RtlTcp(self.device.server, self.device.port, None)
+                sdr.set_sample_rate(SAMPLE_RATE)
+                sdr.set_center_freq(self.spinFreq.GetValue() * 1e6)
+                sdr.set_gain(self.spinGain.GetValue())
+                capture = sdr.read_samples(2 ** 21)
+                sdr.close()
         except IOError as error:
             if self.device.isDevice:
                 message = error.message
