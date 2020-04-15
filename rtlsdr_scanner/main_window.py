@@ -1022,7 +1022,7 @@ class FrameMain(wx.Frame):
             timeStamp = max(self.spectrum)
             spectrum = self.spectrum[timeStamp].copy()
 
-            for x, y in spectrum.iteritems():
+            for x, y in spectrum.items():
                 spectrum[x] = (((x - freq) * (x - freq)) + 1) * y
                 peak = max(spectrum, key=spectrum.get)
 

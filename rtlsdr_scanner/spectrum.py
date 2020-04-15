@@ -256,7 +256,7 @@ def slice_spectrum(spectrum, start, end):
             return None
 
     sweepTemp = {}
-    for f, p in sweep.iteritems():
+    for f, p in sweep.items():
         if start <= f <= end:
             sweepTemp[f] = p
     return sorted(sweepTemp.items(), key=lambda t: t[0])

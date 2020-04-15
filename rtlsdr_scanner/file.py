@@ -46,6 +46,10 @@ from rtlsdr_scanner.misc import format_iso_time
 from rtlsdr_scanner.spectrum import create_mesh, sort_spectrum
 
 
+def bs(s):
+    return bytes(s, encoding="utf-8")
+
+
 class File:
     class Types:
         SAVE, PLOT, IMAGE, GEO, GMAP, TRACK, CONT = range(7)
@@ -341,18 +345,18 @@ def open_plot(dirname, filename):
                 lon = data[1]['Longitude']
             if version < 7:
                 spectrum[1] = {}
-                for f, p in data[1]['Spectrum'].iteritems():
+                for f, p in data[1]['Spectrum'].items():
                     spectrum[1][float(f)] = p
             else:
-                for t, s in data[1]['Spectrum'].iteritems():
+                for t, s in data[1]['Spectrum'].items():
                     spectrum[float(t)] = {}
-                    for f, p in s.iteritems():
+                    for f, p in s.items():
                         spectrum[float(t)][float(f)] = p
             if version > 7:
                 desc = data[1]['Description']
             if version > 8:
                 location = {}
-                for t, l in data[1]['Location'].iteritems():
+                for t, l in data[1]['Location'].items():
                     location[float(t)] = l
 
         except ValueError:
@@ -404,7 +408,7 @@ def save_plot(filename, scanInfo, spectrum, location):
                           'Location': location}]
 
     handle = open(os.path.join(filename), 'wb')
-    handle.write(bytes(json.dumps(data, indent=4), encoding="utf-8"))
+    handle.write(bs(json.dumps(data, indent=4)))
     handle.close()
 
 
@@ -466,29 +470,29 @@ def export_map(filename, exportType, bounds, image, xyz):
 
 def export_csv(handle, spectrum, header=True):
     if header:
-        handle.write(u"Time (UTC), Frequency (MHz),Level (dB/Hz)\n")
+        handle.write(bs("Time (UTC), Frequency (MHz),Level (dB/Hz)\n"))
     if spectrum is not None:
-        for plot in spectrum.iteritems():
-            for freq, pwr in plot[1].iteritems():
-                handle.write("{}, {}, {}\n".format(plot[0], freq, pwr))
+        for plot in spectrum.items():
+            for freq, pwr in plot[1].items():
+                handle.write(bs("{}, {}, {}\n".format(plot[0], freq, pwr)))
 
 
 def export_plt(handle, spectrum):
-    handle.write('set title "RTLSDR Scan"\n')
-    handle.write('set xlabel "Frequency (MHz)"\n')
-    handle.write('set ylabel "Time"\n')
-    handle.write('set zlabel "Level (dB/Hz)"\n')
-    handle.write('set ydata time\n')
-    handle.write('set timefmt "%s"\n')
-    handle.write('set format y "%H:%M:%S"\n')
-    handle.write('set pm3d\n')
-    handle.write('set hidden3d\n')
-    handle.write('set palette rgb 33,13,10\n')
-    handle.write('splot "-" using 1:2:3 notitle with lines \n')
-    for plot in spectrum.iteritems():
-        handle.write('\n')
-        for freq, pwr in plot[1].iteritems():
-            handle.write("{} {} {}\n".format(freq, plot[0], pwr))
+    handle.write(bs('set title "RTLSDR Scan"\n'))
+    handle.write(bs('set xlabel "Frequency (MHz)"\n'))
+    handle.write(bs('set ylabel "Time"\n'))
+    handle.write(bs('set zlabel "Level (dB/Hz)"\n'))
+    handle.write(bs('set ydata time\n'))
+    handle.write(bs('set timefmt "%s"\n'))
+    handle.write(bs('set format y "%H:%M:%S"\n'))
+    handle.write(bs('set pm3d\n'))
+    handle.write(bs('set hidden3d\n'))
+    handle.write(bs('set palette rgb 33,13,10\n'))
+    handle.write(bs('splot "-" using 1:2:3 notitle with lines \n'))
+    for plot in spectrum.items():
+        handle.write(bs('\n'))
+        for freq, pwr in plot[1].items():
+            handle.write(bs("{} {} {}\n".format(freq, plot[0], pwr)))
 
 
 def export_freemat(handle, spectrum):
@@ -496,15 +500,15 @@ def export_freemat(handle, spectrum):
     write_numpy(handle, x, 'x')
     write_numpy(handle, y, 'y')
     write_numpy(handle, z, 'z')
-    handle.write('\n')
-    handle.write('surf(x,y,z)\n')
-    handle.write('view(3)\n')
-    handle.write("set(gca, 'plotboxaspectratio', [3, 2, 1])\n")
-    handle.write("title('RTLSDR Scan')\n")
-    handle.write("xlabel('Frequency (MHz)')\n")
-    handle.write("ylabel('Time')\n")
-    handle.write("zlabel('Level (dB/Hz)')\n")
-    handle.write("grid('on')\n")
+    handle.write(bs('\n'))
+    handle.write(bs('surf(x,y,z)\n'))
+    handle.write(bs('view(3)\n'))
+    handle.write(bs("set(gca, 'plotboxaspectratio', [3, 2, 1])\n"))
+    handle.write(bs("title('RTLSDR Scan')\n"))
+    handle.write(bs("xlabel('Frequency (MHz)')\n"))
+    handle.write(bs("ylabel('Time')\n"))
+    handle.write(bs("zlabel('Level (dB/Hz)')\n"))
+    handle.write(bs("grid('on')\n"))
 
 
 def export_wwb(handle, spectrum):
@@ -519,13 +523,13 @@ def export_wwb(handle, spectrum):
                                                 fileTime.strftime('%a %b %d %Y'),
                                                 fileTime.strftime('%H:%M:%S'),
                                                 len(spectrum))
-    handle.write(header)
+    handle.write(bs(header))
 
     freqs = '\t\t<freq_set>\n'
     for freq in spectrum[min(spectrum)]:
         freqs += '\t\t\t<f>{}</f>\n'.format(freq * 1e3)
     freqs += '\t\t</freq_set>\n'
-    handle.write(freqs)
+    handle.write(bs(freqs))
 
     i = 0
     for sweep in spectrum.items():
@@ -541,19 +545,19 @@ def export_wwb(handle, spectrum):
                                                dataTime.strftime('%a %b %d %Y'),
                                                dataTime.strftime('%H:%M:%S'),
                                                sweep[0])
-        handle.write(dataSet)
+        handle.write(bs(dataSet))
         i += 1
 
         values = ''
         for scan in sweep[1].items():
             values += '\t\t\t<v>{:.1f}</v>\n'.format(scan[1])
-        handle.write(values)
+        handle.write(bs(values))
 
-        handle.write('\t\t</data_set>\n')
+        handle.write(bs('\t\t</data_set>\n'))
 
-    handle.write('\t</data_sets>\n')
-    handle.write('\t<markers/>\n')
-    handle.write('</scan_data_source>\n')
+    handle.write(bs('\t</data_sets>\n'))
+    handle.write(bs('\t<markers/>\n'))
+    handle.write(bs('</scan_data_source>\n'))
 
 
 def export_kmz(filename, bounds, image):
@@ -587,7 +591,7 @@ def export_kmz(filename, bounds, image):
         + '</GroundOverlay>\n' \
         + '</kml>\n'
 
-    handle.write(bytes(s, encoding="utf-8"))
+    handle.write(bs(s))
 
     kmz = zipfile.ZipFile(filename, 'w')
     kmz.write('{}/{}'.format(tempPath, fileKml),
@@ -603,9 +607,9 @@ def export_kmz(filename, bounds, image):
 
 def export_xyz(filename, xyz):
     handle = open(filename, 'wb')
-    handle.write(bytes('x, y, Level (dB/Hz)\n', encoding="utf-8"))
+    handle.write(bs('x, y, Level (dB/Hz)\n'))
     for i in range(len(xyz[0])):
-        handle.write(bytes("{}, {}, {}\n".format(xyz[0][i], xyz[1][i], xyz[2][i]), encoding="utf-8"))
+        handle.write(bs("{}, {}, {}\n".format(xyz[0][i], xyz[1][i], xyz[2][i])))
     handle.close()
 
 
@@ -622,7 +626,7 @@ def export_gpx(filename, locations, name):
               '\t<trk>\n'
               '\t\t<name>{}</name>\n'
               '\t\t<trkseg>\n').format(name, 'test name')
-    handle.write(bytes(header, encoding="utf-8"))
+    handle.write(bs(header))
 
     for location in sorted(locations.items()):
         timeStamp = format_iso_time(location[0])
@@ -633,22 +637,22 @@ def export_gpx(filename, locations, name):
                  '\t\t\t\t<ele>{}</ele>\n'
                  '\t\t\t\t<time>{}</time>\n'
                  '\t\t\t</trkpt>\n').format(lat, lon, alt, timeStamp)
-        handle.write(bytes(point, encoding="utf-8"))
+        handle.write(bs(point))
 
     footer = ('\t\t</trkseg>\n'
               '\t</trk>\n'
               '</gpx>\n')
-    handle.write(bytes(footer, encoding="utf-8"))
+    handle.write(bs(footer))
     handle.close()
 
 
 def write_numpy(handle, array, name):
-    handle.write('{}=[\n'.format(name))
+    handle.write(bs('{}=[\n'.format(name)))
     for i in array:
         for j in i:
-            handle.write('{} '.format(j))
-        handle.write(';\n')
-    handle.write(']\n')
+            handle.write(bs('{} '.format(j)))
+        handle.write(bs(';\n'))
+    handle.write(bs(']\n'))
 
 
 def extension_add(fileName, index, fileType):
