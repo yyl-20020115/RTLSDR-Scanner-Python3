@@ -1,7 +1,7 @@
 pip~=20.0.2
 matplotlib~=3.2.1
 wxPython~=4.0.7.post2
-Pillow~=6.2.2
+Pillow~=7.1.0
 pyserial~=3.4
 pyrtlsdr~=0.2.92
 numpy~=1.16.6
